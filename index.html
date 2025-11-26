@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BSC Wallet</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .section {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+
+        .section h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-bottom: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.secondary {
+            background: #6c757d;
+        }
+
+        button.secondary:hover {
+            box-shadow: 0 5px 15px rgba(108, 117, 125, 0.4);
+        }
+
+        .info-box {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            word-break: break-all;
+            font-size: 14px;
+            border: 2px solid #e9ecef;
+        }
+
+        .info-box label {
+            font-weight: 600;
+            color: #667eea;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .warning {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: #856404;
+        }
+
+        .warning strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 10px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .balance {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .copy-btn {
+            background: #28a745;
+            padding: 8px 16px;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        .copy-btn:hover {
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-buttons button {
+            flex: 1;
+        }
+
+        .success {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            color: #155724;
+        }
+
+        .error {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 BSC Wallet</h1>
+        <p class="subtitle">Binance Smart Chain Wallet</p>
+
+        <div class="warning">
+            <strong>⚠️ AVERTISSEMENT DE SÉCURITÉ</strong>
+            Ne partagez JAMAIS votre phrase de récupération ou clé privée avec qui que ce soit. Conservez-les en lieu sûr hors ligne.
+        </div>
+
+        <!-- Écran d'accueil -->
+        <div id="welcomeScreen">
+            <div class="section">
+                <h2>Bienvenue</h2>
+                <button onclick="createWallet()">Créer un nouveau wallet</button>
+                <button onclick="showImportScreen()" class="secondary">Importer un wallet existant</button>
+            </div>
+        </div>
+
+        <!-- Écran de création -->
+        <div id="createScreen" class="hidden">
+            <div class="section">
+                <h2>Votre nouveau wallet</h2>
+                <div class="info-box">
+                    <label>Adresse publique :</label>
+                    <div id="newAddress"></div>
+                    <button class="copy-btn" onclick="copyToClipboard('newAddress')">📋 Copier</button>
+                </div>
+                <div class="info-box">
+                    <label>Phrase de récupération (12 mots) :</label>
+                    <div id="newMnemonic"></div>
+                    <button class="copy-btn" onclick="copyToClipboard('newMnemonic')">📋 Copier</button>
+                </div>
+                <div class="info-box">
+                    <label>Clé privée :</label>
+                    <div id="newPrivateKey"></div>
+                    <button class="copy-btn" onclick="copyToClipboard('newPrivateKey')">📋 Copier</button>
+                </div>
+                <button onclick="saveAndContinue()">Sauvegarder et continuer</button>
+            </div>
+        </div>
+
+        <!-- Écran d'import -->
+        <div id="importScreen" class="hidden">
+            <div class="section">
+                <h2>Importer un wallet</h2>
+                <input type="text" id="importMnemonic" placeholder="Entrez votre phrase de récupération (12 mots)">
+                <button onclick="importWallet()">Importer</button>
+                <button onclick="showWelcomeScreen()" class="secondary">Retour</button>
+                <div id="importMessage"></div>
+            </div>
+        </div>
+
+        <!-- Écran principal du wallet -->
+        <div id="walletScreen" class="hidden">
+            <div class="section">
+                <h2>Mon Wallet</h2>
+                <div class="info-box">
+                    <label>Adresse :</label>
+                    <div id="walletAddress"></div>
+                    <button class="copy-btn" onclick="copyToClipboard('walletAddress')">📋 Copier</button>
+                </div>
+                <div class="balance" id="balance">0.0000 BNB</div>
+                <button onclick="refreshBalance()">🔄 Actualiser le solde</button>
+            </div>
+
+            <div class="tab-buttons">
+                <button onclick="showSendTab()">Envoyer</button>
+                <button onclick="showReceiveTab()">Recevoir</button>
+            </div>
+
+            <!-- Onglet Envoyer -->
+            <div id="sendTab" class="section">
+                <h2>Envoyer BNB</h2>
+                <input type="text" id="recipientAddress" placeholder="Adresse du destinataire">
+                <input type="text" id="amount" placeholder="Montant en BNB">
+                <button onclick="sendTransaction()">Envoyer</button>
+                <div id="sendMessage"></div>
+            </div>
+
+            <!-- Onglet Recevoir -->
+            <div id="receiveTab" class="section hidden">
+                <h2>Recevoir BNB</h2>
+                <p>Partagez cette adresse pour recevoir des BNB :</p>
+                <div class="info-box">
+                    <div id="receiveAddress"></div>
+                    <button class="copy-btn" onclick="copyToClipboard('receiveAddress')">📋 Copier l'adresse</button>
+                </div>
+            </div>
+
+            <button onclick="logout()" class="secondary">Déconnexion</button>
+        </div>
+    </div>
+
+    <script>
+        const BSC_RPC = "https://bsc-dataseed.binance.org/";
+        let wallet = null;
+        let provider = null;
+
+        // Initialiser le provider BSC
+        provider = new ethers.JsonRpcProvider(BSC_RPC);
+
+        // Créer un nouveau wallet
+        function createWallet() {
+            wallet = ethers.Wallet.createRandom();
+            
+            document.getElementById('newAddress').textContent = wallet.address;
+            document.getElementById('newMnemonic').textContent = wallet.mnemonic.phrase;
+            document.getElementById('newPrivateKey').textContent = wallet.privateKey;
+            
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            document.getElementById('createScreen').classList.remove('hidden');
+        }
+
+        // Sauvegarder et continuer
+        function saveAndContinue() {
+            if (wallet) {
+                showWalletScreen();
+            }
+        }
+
+        // Afficher l'écran d'import
+        function showImportScreen() {
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            document.getElementById('importScreen').classList.remove('hidden');
+        }
+
+        // Importer un wallet
+        function importWallet() {
+            const mnemonic = document.getElementById('importMnemonic').value.trim();
+            const messageDiv = document.getElementById('importMessage');
+            
+            try {
+                wallet = ethers.Wallet.fromPhrase(mnemonic);
+                messageDiv.innerHTML = '<div class="success">Wallet importé avec succès !</div>';
+                setTimeout(() => {
+                    showWalletScreen();
+                }, 1500);
+            } catch (error) {
+                messageDiv.innerHTML = '<div class="error">Phrase de récupération invalide. Vérifiez et réessayez.</div>';
+            }
+        }
+
+        // Afficher l'écran du wallet
+        function showWalletScreen() {
+            wallet = wallet.connect(provider);
+            
+            document.getElementById('walletAddress').textContent = wallet.address;
+            document.getElementById('receiveAddress').textContent = wallet.address;
+            
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            document.getElementById('createScreen').classList.add('hidden');
+            document.getElementById('importScreen').classList.add('hidden');
+            document.getElementById('walletScreen').classList.remove('hidden');
+            
+            refreshBalance();
+        }
+
+        // Actualiser le solde
+        async function refreshBalance() {
+            if (!wallet) return;
+            
+            try {
+                const balance = await provider.getBalance(wallet.address);
+                const balanceInBNB = ethers.formatEther(balance);
+                document.getElementById('balance').textContent = parseFloat(balanceInBNB).toFixed(4) + ' BNB';
+            } catch (error) {
+                console.error('Erreur lors de la récupération du solde:', error);
+                document.getElementById('balance').textContent = 'Erreur';
+            }
+        }
+
+        // Envoyer une transaction
+        async function sendTransaction() {
+            const recipient = document.getElementById('recipientAddress').value.trim();
+            const amount = document.getElementById('amount').value.trim();
+            const messageDiv = document.getElementById('sendMessage');
+            
+            if (!recipient || !amount) {
+                messageDiv.innerHTML = '<div class="error">Veuillez remplir tous les champs.</div>';
+                return;
+            }
+            
+            try {
+                const tx = await wallet.sendTransaction({
+                    to: recipient,
+                    value: ethers.parseEther(amount)
+                });
+                
+                messageDiv.innerHTML = '<div class="success">Transaction envoyée ! Hash: ' + tx.hash + '</div>';
+                
+                await tx.wait();
+                messageDiv.innerHTML = '<div class="success">Transaction confirmée !</div>';
+                refreshBalance();
+                
+                document.getElementById('recipientAddress').value = '';
+                document.getElementById('amount').value = '';
+            } catch (error) {
+                messageDiv.innerHTML = '<div class="error">Erreur: ' + error.message + '</div>';
+            }
+        }
+
+        // Afficher l'onglet d'envoi
+        function showSendTab() {
+            document.getElementById('sendTab').classList.remove('hidden');
+            document.getElementById('receiveTab').classList.add('hidden');
+        }
+
+        // Afficher l'onglet de réception
+        function showReceiveTab() {
+            document.getElementById('sendTab').classList.add('hidden');
+            document.getElementById('receiveTab').classList.remove('hidden');
+        }
+
+        // Copier dans le presse-papier
+        function copyToClipboard(elementId) {
+            const text = document.getElementById(elementId).textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Copié dans le presse-papier !');
+            });
+        }
+
+        // Déconnexion
+        function logout() {
+            wallet = null;
+            document.getElementById('walletScreen').classList.add('hidden');
+            showWelcomeScreen();
+        }
+
+        // Retour à l'écran d'accueil
+        function showWelcomeScreen() {
+            document.getElementById('welcomeScreen').classList.remove('hidden');
+            document.getElementById('createScreen').classList.add('hidden');
+            document.getElementById('importScreen').classList.add('hidden');
+            document.getElementById('walletScreen').classList.add('hidden');
+            document.getElementById('importMnemonic').value = '';
+        }
+    </script>
+</body>
+</html>
