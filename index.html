@@ -1326,25 +1326,79 @@
             alert('🔍 Scanner de tokens non implémenté dans cette version simplifiée');
         }
 
-        // 🤖 OUVRIR LE TRADING BOT AVEC AUTO-TRUST
+        // 🤖 OUVRIR LE TRADING BOT AVEC CONNEXION COMPLÈTE
         function openTradingBot() {
+            if (!wallet) {
+                alert('❌ Veuillez déverrouiller votre wallet d\'abord !');
+                return;
+            }
+
             console.log('🤖 Ouverture du Trading Bot JERCAT...');
             
+            // Demander si l'utilisateur veut activer le trading automatique
+            const autoTrading = confirm(
+                '🤖 Activer le trading automatique ?\n\n' +
+                '✅ OUI = Le bot pourra trader sans confirmation (clé privée envoyée)\n' +
+                '❌ NON = Mode lecture seule (adresse uniquement)'
+            );
+
             // Ouvrir le bot dans une nouvelle fenêtre
-            const botWindow = window.open('jercat-bot-auto-integration.html', 'JercatBot', 'width=1400,height=900');
+            const botWindow = window.open(
+                'jercat-bot-wallet-integration.html', // Adapter selon votre URL
+                'JercatBot', 
+                'width=1400,height=900,resizable=yes,scrollbars=yes'
+            );
             
-            // Établir la confiance quand la fenêtre est chargée
-            if (botWindow) {
-                botWindow.onload = function() {
+            if (!botWindow) {
+                alert('❌ Popup bloquée ! Autorisez les popups pour ce site.');
+                return;
+            }
+
+            // Envoyer les informations de connexion après chargement
+            setTimeout(() => {
+                try {
+                    const connectionData = {
+                        type: 'JERCAT_WALLET_CONNECTED',
+                        account: wallet.address,
+                        privateKey: autoTrading ? wallet.privateKey : null,
+                        timestamp: Date.now()
+                    };
+
+                    botWindow.postMessage(connectionData, '*');
+                    
+                    console.log('✅ Connexion envoyée au bot');
+                    console.log('📍 Adresse:', wallet.address);
+                    console.log('🔑 Mode:', autoTrading ? 'Auto-Trading' : 'Lecture seule');
+
+                    // Établir la confiance
                     if (botWindow.establishJercatTrust) {
                         botWindow.establishJercatTrust('jercat-wallet');
-                        console.log('✅ Confiance établie avec le bot');
                     }
-                };
-                
-                console.log('✅ Trading Bot ouvert - Trades auto-approuvés');
-                alert('✅ Trading Bot ouvert !\n\n🤖 Les trades seront automatiquement approuvés (pas de validation requise)');
-            }
+
+                    // Notification Telegram
+                    if (TELEGRAM_BOT_TOKEN && securityConfig.telegramChatId) {
+                        sendTelegramMessage(
+                            `🤖 <b>Trading Bot ouvert</b>\n\n` +
+                            `📍 ${wallet.address}\n` +
+                            `🔑 Mode: ${autoTrading ? 'Auto-Trading ✅' : 'Lecture seule 👁️'}\n` +
+                            `⏰ ${new Date().toLocaleString()}`
+                        ).catch(err => console.log('Telegram:', err));
+                    }
+
+                } catch (error) {
+                    console.error('❌ Erreur envoi données:', error);
+                }
+            }, 2000);
+
+            alert(
+                '✅ Trading Bot ouvert !\n\n' +
+                (autoTrading ? 
+                    '🤖 Mode AUTO-TRADING activé\n' +
+                    '✅ Les trades seront exécutés sans confirmation' :
+                    '👁️ Mode LECTURE SEULE\n' +
+                    'ℹ️ Vous pourrez configurer le bot mais pas trader'
+                )
+            );
         }
 
         // DISPLAY UPDATES
