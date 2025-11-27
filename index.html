@@ -405,28 +405,69 @@
 
             <!-- Configuration Telegram -->
             <div class="section">
-                <h2>🤖 Configuration Telegram</h2>
+                <h2>🤖 Configuration Telegram Bot</h2>
                 
                 <div class="telegram-setup">
-                    <h3 style="color: #0088cc; margin-bottom: 15px; font-size: 16px;">📱 Comment obtenir votre Chat ID :</h3>
+                    <h3 style="color: #0088cc; margin-bottom: 15px; font-size: 16px;">🤖 Étape 1 : Créer votre bot Telegram</h3>
                     <ol style="color: #e2e8f0; line-height: 2; margin-left: 20px; font-size: 14px;">
                         <li>Ouvrez Telegram</li>
+                        <li>Recherchez <strong style="color: #f59e0b;">@BotFather</strong></li>
+                        <li>Envoyez <strong style="color: #f59e0b;">/newbot</strong></li>
+                        <li>Suivez les instructions pour créer votre bot</li>
+                        <li>Copiez le <strong style="color: #f59e0b;">Token</strong> que BotFather vous donne</li>
+                        <li>Collez-le ci-dessous ⬇️</li>
+                    </ol>
+                </div>
+
+                <div class="info-box" style="margin-top: 15px; background: #0088cc20; border-color: #0088cc;">
+                    <label style="color: #0088cc;">🔑 Token de votre Bot Telegram :</label>
+                    <div style="color: #e2e8f0; font-size: 12px; margin-bottom: 10px;">
+                        Format : 1234567890:ABCdefGHIjklMNOpqrsTUVwxyz
+                    </div>
+                    <input type="text" id="botTokenInput" placeholder="Collez votre Bot Token ici..." 
+                           style="font-family: monospace; font-size: 13px;" 
+                           value="">
+                </div>
+                
+                <button onclick="saveBotToken()" style="margin-top: 10px;">💾 Enregistrer le Bot Token</button>
+
+                <div id="botTokenStatus" class="info-box" style="margin-top: 15px;">
+                    <label>🤖 Statut du Bot :</label>
+                    <div id="botTokenStatusText" style="color: #64748b;">Non configuré</div>
+                </div>
+
+                <hr style="border: 1px solid #334155; margin: 30px 0;">
+
+                <div class="telegram-setup">
+                    <h3 style="color: #0088cc; margin-bottom: 15px; font-size: 16px;">📱 Étape 2 : Obtenir votre Chat ID</h3>
+                    <ol style="color: #e2e8f0; line-height: 2; margin-left: 20px; font-size: 14px;">
+                        <li>Toujours dans Telegram</li>
                         <li>Recherchez <strong style="color: #f59e0b;">@userinfobot</strong></li>
                         <li>Envoyez <strong style="color: #f59e0b;">/start</strong></li>
-                        <li>Copiez votre <strong style="color: #f59e0b;">Chat ID</strong></li>
-                        <li>Collez-le ci-dessous</li>
+                        <li>Copiez votre <strong style="color: #f59e0b;">Chat ID</strong> (les chiffres)</li>
+                        <li>Collez-le ci-dessous ⬇️</li>
                     </ol>
                 </div>
 
                 <input type="text" id="newTelegramId" placeholder="Votre Telegram Chat ID (ex: 123456789)" value="">
-                <button onclick="updateTelegramId()">💾 Sauvegarder Chat ID</button>
+                <button onclick="updateTelegramId()">💾 Enregistrer le Chat ID</button>
                 
                 <div id="telegramStatus" class="info-box" style="margin-top: 15px;">
-                    <label>📱 Statut Telegram :</label>
+                    <label>📱 Statut Chat ID :</label>
                     <div id="telegramStatusText" style="color: #64748b;">Non configuré</div>
                 </div>
 
-                <button onclick="testTelegram()" class="secondary" style="margin-top: 10px;">🧪 Tester la connexion Telegram</button>
+                <button onclick="testTelegram()" class="secondary" style="margin-top: 15px;">🧪 Tester la connexion Telegram</button>
+                
+                <div class="warning" style="margin-top: 20px;">
+                    <strong>⚠️ SÉCURITÉ</strong><br>
+                    • Gardez votre Bot Token SECRET<br>
+                    • Ne le partagez JAMAIS avec personne<br>
+                    • Il est stocké localement dans votre navigateur<br>
+                    • Supprimez-le si vous utilisez un ordinateur public
+                </div>
+
+                <button onclick="clearTelegramConfig()" class="danger" style="margin-top: 10px;">🗑️ Supprimer toute la config Telegram</button>
             </div>
 
             <!-- Applications de confiance -->
@@ -627,8 +668,8 @@
         let provider = new ethers.JsonRpcProvider(BSC_RPC);
         let wallet = null;
 
-        // ⚠️ VOTRE BOT TELEGRAM - Créez-le avec @BotFather
-        const TELEGRAM_BOT_TOKEN = 'YOUR_BOT_TOKEN_HERE';  // Ex: '6789012345:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw'
+        // Le bot token sera configuré via l'interface, pas dans le code
+        let TELEGRAM_BOT_TOKEN = localStorage.getItem('telegramBotToken') || '';
 
         let securityConfig = {
             maxPerTransaction: 1.0,
@@ -780,6 +821,8 @@
             loadConfig();
             refreshBalance();
             updateProtectionDisplay();
+            updateBotTokenStatus();
+            updateTelegramStatus();
 
             // Activer le scan automatique si activé
             if (securityConfig.protectionSettings.autoScanIncoming) {
@@ -810,14 +853,84 @@
             }
         }
 
-        function updateTelegramStatus() {
-            const statusDiv = document.getElementById('telegramStatusText');
-            if (securityConfig.telegramChatId) {
-                statusDiv.innerHTML = `<span style="color: #10b981; font-weight: 700;">✅ Configuré (ID: ${securityConfig.telegramChatId})</span>`;
+        function saveBotToken() {
+            const token = document.getElementById('botTokenInput').value.trim();
+            
+            // Validation du format du token
+            if (!token) {
+                alert('❌ Entrez un token');
+                return;
+            }
+
+            // Format attendu: nombre:chaîne (ex: 123456789:ABCdef...)
+            const tokenPattern = /^\d{8,10}:[A-Za-z0-9_-]{35}$/;
+            if (!tokenPattern.test(token)) {
+                alert('⚠️ Format de token invalide.\n\nFormat attendu:\n1234567890:ABCdefGHIjklMNOpqrsTUVwxyz\n\nVérifiez que vous avez copié le token complet depuis @BotFather');
+                return;
+            }
+
+            // Sauvegarder le token
+            localStorage.setItem('telegramBotToken', token);
+            TELEGRAM_BOT_TOKEN = token;
+            
+            updateBotTokenStatus();
+            alert('✅ Bot Token enregistré avec succès !\n\nVous pouvez maintenant configurer votre Chat ID.');
+        }
+
+        function updateBotTokenStatus() {
+            const statusDiv = document.getElementById('botTokenStatusText');
+            const tokenInput = document.getElementById('botTokenInput');
+            
+            if (TELEGRAM_BOT_TOKEN) {
+                // Masquer le token sauf les 10 premiers caractères
+                const maskedToken = TELEGRAM_BOT_TOKEN.substring(0, 10) + '...' + TELEGRAM_BOT_TOKEN.slice(-10);
+                statusDiv.innerHTML = `<span style="color: #10b981; font-weight: 700;">✅ Configuré</span><br>
+                                       <span style="color: #64748b; font-size: 12px; font-family: monospace;">${maskedToken}</span>`;
+                
+                // Pré-remplir l'input avec le token masqué
+                tokenInput.value = maskedToken;
+                tokenInput.placeholder = 'Token déjà configuré';
             } else {
                 statusDiv.innerHTML = '<span style="color: #dc2626; font-weight: 700;">❌ Non configuré</span>';
+                tokenInput.value = '';
+                tokenInput.placeholder = 'Collez votre Bot Token ici...';
+            }
+        }
+
+        function updateTelegramStatus() {
+            const statusDiv = document.getElementById('telegramStatusText');
+            const chatIdInput = document.getElementById('newTelegramId');
+            
+            if (securityConfig.telegramChatId) {
+                statusDiv.innerHTML = `<span style="color: #10b981; font-weight: 700;">✅ Configuré (ID: ${securityConfig.telegramChatId})</span>`;
+                chatIdInput.value = securityConfig.telegramChatId;
+            } else {
+                statusDiv.innerHTML = '<span style="color: #dc2626; font-weight: 700;">❌ Non configuré</span>';
+                chatIdInput.value = '';
             }
             updateTrustedAppsDisplay();
+        }
+
+        function clearTelegramConfig() {
+            if (!confirm('⚠️ Êtes-vous sûr de vouloir supprimer toute la configuration Telegram ?\n\n• Bot Token\n• Chat ID\n\nCette action est irréversible.')) {
+                return;
+            }
+
+            // Supprimer le bot token
+            localStorage.removeItem('telegramBotToken');
+            TELEGRAM_BOT_TOKEN = '';
+
+            // Supprimer le chat ID
+            securityConfig.telegramChatId = '';
+            saveConfig();
+
+            // Mettre à jour l'interface
+            document.getElementById('botTokenInput').value = '';
+            document.getElementById('newTelegramId').value = '';
+            updateBotTokenStatus();
+            updateTelegramStatus();
+
+            alert('✅ Configuration Telegram supprimée');
         }
 
         function addTrustedApp() {
@@ -879,30 +992,59 @@
         }
 
         async function testTelegram() {
-            if (!securityConfig.telegramChatId) {
-                alert('❌ Configurez d\'abord votre Chat ID !');
+            // Vérifier que le bot token est configuré
+            if (!TELEGRAM_BOT_TOKEN) {
+                alert('❌ Bot Token non configuré !\n\nÉtape 1: Créez un bot avec @BotFather\nÉtape 2: Enregistrez le token ci-dessus\nÉtape 3: Configurez votre Chat ID\nÉtape 4: Testez la connexion');
                 return;
             }
 
-            if (TELEGRAM_BOT_TOKEN === 'YOUR_BOT_TOKEN_HERE') {
-                alert('⚠️ MODE TEST\n\nVotre bot Telegram n\'est pas encore configuré.\n\nPour l\'activer :\n1. Créez un bot avec @BotFather sur Telegram\n2. Remplacez TELEGRAM_BOT_TOKEN dans le code\n\nPour l\'instant, le système fonctionne en mode local sans Telegram.');
+            // Vérifier que le chat ID est configuré
+            if (!securityConfig.telegramChatId) {
+                alert('❌ Chat ID non configuré !\n\nÉtape 1: Parlez à @userinfobot sur Telegram\nÉtape 2: Copiez votre Chat ID\nÉtape 3: Enregistrez-le ci-dessus');
                 return;
             }
+
+            const testBtn = event.target;
+            testBtn.disabled = true;
+            testBtn.innerHTML = '⏳ Test en cours...';
 
             try {
-                const message = `🤖 JERCAT Wallet - Test de connexion\n\n✅ Votre wallet est connecté !\n\nVous recevrez des notifications ici pour valider vos transactions.`;
+                const message = `🤖 <b>JERCAT Wallet - Test de connexion</b>
+
+✅ Votre bot est correctement configuré !
+
+📱 Chat ID: ${securityConfig.telegramChatId}
+🤖 Bot: Actif et fonctionnel
+
+🎉 Vous recevrez maintenant des notifications ici pour :
+• Valider les transactions à risque
+• Détecter les airdrops scam
+• Surveiller les nouveaux tokens
+
+<b>Configuration réussie !</b>`;
                 
                 await sendTelegramMessage(message);
-                alert('✅ Message de test envoyé ! Vérifiez Telegram.');
+                alert('✅ Message de test envoyé avec succès !\n\nVérifiez votre Telegram, vous devriez avoir reçu un message de votre bot.');
+                
             } catch (error) {
-                alert('❌ Erreur : ' + error.message);
+                console.error('Erreur test Telegram:', error);
+                alert('❌ Erreur lors du test:\n\n' + error.message + '\n\nVérifiez que:\n• Le Bot Token est correct\n• Le Chat ID est correct\n• Vous avez démarré une conversation avec votre bot (/start)');
+            } finally {
+                testBtn.disabled = false;
+                testBtn.innerHTML = '🧪 Tester la connexion Telegram';
             }
         }
 
         async function sendTelegramMessage(message, showButtons = false) {
-            if (!securityConfig.telegramChatId || TELEGRAM_BOT_TOKEN === 'YOUR_BOT_TOKEN_HERE') {
-                console.log('📱 TELEGRAM MESSAGE (mode test):\n', message);
-                return;
+            // Mode simulation si pas de bot configuré
+            if (!TELEGRAM_BOT_TOKEN) {
+                console.log('📱 TELEGRAM MESSAGE (mode simulation - bot non configuré):\n', message);
+                return { ok: true, mode: 'simulation' };
+            }
+
+            if (!securityConfig.telegramChatId) {
+                console.log('📱 TELEGRAM MESSAGE (mode simulation - chat ID manquant):\n', message);
+                return { ok: true, mode: 'simulation' };
             }
 
             const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
@@ -922,14 +1064,23 @@
                 };
             }
 
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
 
-            if (!response.ok) {
-                throw new Error('Erreur Telegram');
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.description || 'Erreur Telegram API');
+                }
+
+                return { ok: true, mode: 'real', data: data };
+            } catch (error) {
+                console.error('❌ Erreur Telegram:', error);
+                throw new Error('Impossible d\'envoyer le message Telegram: ' + error.message);
             }
         }
 
