@@ -967,16 +967,16 @@
                 
                 const currentBlock = await provider.getBlockNumber();
                 
-                // Scanner les 2000 derniers blocs (~1.5 heures)
-                const startBlock = currentBlock - 2000;
+                // Scanner les 5000 derniers blocs (~4 heures sur BSC)
+                const startBlock = currentBlock - 5000;
                 lastCheckedBlock = startBlock;
                 
-                console.log(`🔍 Scan forcé des blocs ${startBlock} à ${currentBlock}`);
+                console.log(`🔍 Scan forcé des blocs ${startBlock} à ${currentBlock} (5000 blocs = ~4 heures)`);
                 
                 await checkNewTransactions(wallet.address);
                 
                 updateMonitoringStatus(`✅ Scan terminé - Bloc actuel: ${currentBlock}`);
-                alert('✅ Vérification terminée ! Si des transactions ont été trouvées, vous avez reçu des notifications.');
+                alert('✅ Vérification terminée ! Si des transactions ont été trouvées, vous avez reçu des notifications Telegram.');
                 
             } catch (error) {
                 console.error('Erreur scan forcé:', error);
@@ -1538,14 +1538,14 @@ ${emoji} <b>Transaction ${statusText} (Externe)</b>
             try {
                 const walletAddress = wallet.address;
                 const currentBlock = await provider.getBlockNumber();
-                const startBlock = currentBlock - 500; // Chercher dans les 500 derniers blocs (~25 minutes)
+                const startBlock = currentBlock - 2000; // Chercher dans les 2000 derniers blocs (~1.5 heures)
 
                 diagnosticDiv.innerHTML = `
                     <div class="info-box">
                         <strong>🔍 Scan en cours...</strong><br>
                         <span style="color: #64748b; font-size: 12px;">
                         Adresse: ${walletAddress}<br>
-                        Blocs: ${startBlock} → ${currentBlock} (derniers 25 min)
+                        Blocs: ${startBlock} → ${currentBlock} (derniers ~1.5 heures)
                         </span>
                     </div>
                 `;
@@ -1572,13 +1572,13 @@ ${emoji} <b>Transaction ${statusText} (Externe)</b>
                         console.error(`Erreur bloc ${blockNum}:`, e);
                     }
 
-                    // Mise à jour de la progression tous les 50 blocs
-                    if ((currentBlock - blockNum) % 50 === 0) {
+                    // Mise à jour de la progression tous les 100 blocs
+                    if ((currentBlock - blockNum) % 100 === 0) {
                         diagnosticDiv.innerHTML = `
                             <div class="info-box">
                                 <strong>🔍 Scan en cours...</strong><br>
                                 <span style="color: #64748b; font-size: 12px;">
-                                Progression: ${currentBlock - blockNum}/500 blocs<br>
+                                Progression: ${currentBlock - blockNum}/2000 blocs<br>
                                 Transactions trouvées: ${foundTransactions.length}
                                 </span>
                             </div>
@@ -1623,7 +1623,7 @@ ${emoji} <b>Transaction ${statusText} (Externe)</b>
                     diagnosticDiv.innerHTML = `
                         <div class="safety-indicator safety-warning">
                             <strong>⚠️ Aucune transaction trouvée</strong><br>
-                            Aucune transaction sortante détectée dans les 500 derniers blocs (~25 minutes).<br><br>
+                            Aucune transaction sortante détectée dans les 2000 derniers blocs (~1.5 heures).<br><br>
                             Vos transactions sont peut-être plus anciennes. Le monitoring détectera les prochaines automatiquement.
                         </div>
                     `;
