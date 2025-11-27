@@ -510,6 +510,9 @@
 
                 <div class="section">
                     <h2>🚨 Actions</h2>
+                    <button onclick="openTradingBot()" style="background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%); color: #000; margin-bottom: 10px;">
+                        🤖 Ouvrir le Trading Bot
+                    </button>
                     <button onclick="logout()" class="secondary">🔒 Verrouiller le Wallet</button>
                     <button onclick="clearTelegramConfig()" class="danger">🗑️ Supprimer config Telegram</button>
                 </div>
@@ -1321,6 +1324,27 @@
 
         function scanWalletTokens() {
             alert('🔍 Scanner de tokens non implémenté dans cette version simplifiée');
+        }
+
+        // 🤖 OUVRIR LE TRADING BOT AVEC AUTO-TRUST
+        function openTradingBot() {
+            console.log('🤖 Ouverture du Trading Bot JERCAT...');
+            
+            // Ouvrir le bot dans une nouvelle fenêtre
+            const botWindow = window.open('jercat-bot-auto-integration.html', 'JercatBot', 'width=1400,height=900');
+            
+            // Établir la confiance quand la fenêtre est chargée
+            if (botWindow) {
+                botWindow.onload = function() {
+                    if (botWindow.establishJercatTrust) {
+                        botWindow.establishJercatTrust('jercat-wallet');
+                        console.log('✅ Confiance établie avec le bot');
+                    }
+                };
+                
+                console.log('✅ Trading Bot ouvert - Trades auto-approuvés');
+                alert('✅ Trading Bot ouvert !\n\n🤖 Les trades seront automatiquement approuvés (pas de validation requise)');
+            }
         }
 
         // DISPLAY UPDATES
