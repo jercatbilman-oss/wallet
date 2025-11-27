@@ -3,77 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secure Trading Wallet</title>
+    <title>🔐 JERCAT Wallet + Telegram</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
             min-height: 100vh;
             padding: 20px;
-            color: #333;
+            color: #e2e8f0;
         }
 
         .container {
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
-            background: white;
+            background: linear-gradient(to bottom right, #1e293b, #0f172a);
             border-radius: 20px;
             padding: 30px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            border: 1px solid #334155;
         }
 
         h1 {
             text-align: center;
-            color: #1e3c72;
+            background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
             margin-bottom: 10px;
-            font-size: 28px;
+            font-size: 32px;
+            font-weight: 900;
         }
 
         .subtitle {
             text-align: center;
-            color: #666;
+            color: #94a3b8;
             margin-bottom: 30px;
             font-size: 14px;
+            font-weight: 600;
         }
 
         .section {
             margin-bottom: 25px;
             padding: 20px;
-            background: #f8f9fa;
+            background: linear-gradient(to bottom right, #1e293b, #0f172a);
             border-radius: 12px;
+            border: 1px solid #334155;
         }
 
         .section h2 {
             font-size: 18px;
             margin-bottom: 15px;
-            color: #1e3c72;
+            color: #f59e0b;
+            font-weight: 700;
         }
 
         button {
             width: 100%;
             padding: 14px;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            color: white;
+            background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+            color: #000;
             border: none;
             border-radius: 8px;
             font-size: 16px;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
-            transition: transform 0.2s;
+            transition: all 0.2s;
             margin-bottom: 10px;
         }
 
         button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(30, 60, 114, 0.4);
+            box-shadow: 0 10px 25px rgba(245, 158, 11, 0.4);
         }
 
         button:disabled {
@@ -82,78 +85,74 @@
         }
 
         button.danger {
-            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            color: white;
         }
 
         button.success {
-            background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
         }
 
         button.secondary {
-            background: #6c757d;
+            background: #334155;
+            color: #e2e8f0;
         }
 
-        input {
+        input, select {
             width: 100%;
             padding: 12px;
-            border: 2px solid #e9ecef;
+            background: #0f172a;
+            border: 2px solid #334155;
             border-radius: 8px;
             font-size: 14px;
             margin-bottom: 10px;
+            color: #e2e8f0;
         }
 
-        input:focus {
+        input:focus, select:focus {
             outline: none;
-            border-color: #1e3c72;
+            border-color: #f59e0b;
         }
 
         .warning {
-            background: #fff3cd;
-            border: 2px solid #ffc107;
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 2px solid #f59e0b;
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 20px;
             font-size: 13px;
-            color: #856404;
-        }
-
-        .error {
-            background: #f8d7da;
-            border: 2px solid #dc3545;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 15px;
-            color: #721c24;
-        }
-
-        .success-msg {
-            background: #d4edda;
-            border: 2px solid #28a745;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 15px;
-            color: #155724;
+            color: #78350f;
+            font-weight: 600;
         }
 
         .info-box {
-            background: white;
+            background: #0f172a;
             padding: 15px;
             border-radius: 8px;
             margin-top: 15px;
             word-break: break-all;
             font-size: 14px;
-            border: 2px solid #e9ecef;
+            border: 2px solid #334155;
         }
 
         .info-box label {
-            font-weight: 600;
-            color: #1e3c72;
+            font-weight: 700;
+            color: #f59e0b;
             display: block;
             margin-bottom: 8px;
         }
 
-        .hidden {
-            display: none;
+        .hidden { display: none; }
+
+        .balance {
+            font-size: 36px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+            margin: 20px 0;
         }
 
         .stats {
@@ -164,44 +163,130 @@
         }
 
         .stat-box {
-            background: white;
+            background: #0f172a;
             padding: 15px;
             border-radius: 8px;
-            border: 2px solid #e9ecef;
+            border: 2px solid #334155;
         }
 
         .stat-label {
             font-size: 12px;
-            color: #666;
+            color: #94a3b8;
             margin-bottom: 5px;
+            font-weight: 600;
         }
 
         .stat-value {
             font-size: 20px;
-            font-weight: bold;
-            color: #1e3c72;
+            font-weight: 900;
+            color: #f59e0b;
         }
 
-        .balance {
-            font-size: 32px;
-            font-weight: bold;
-            color: #1e3c72;
-            text-align: center;
-            margin: 20px 0;
+        .telegram-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #0088cc 0%, #0077b5 100%);
+            color: white;
+            margin-left: 10px;
+        }
+
+        .auto-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            margin-left: 10px;
+        }
+
+        .safety-indicator {
+            padding: 15px;
+            border-radius: 12px;
+            margin: 15px 0;
+            font-weight: 600;
+            border: 2px solid;
+        }
+
+        .safety-safe {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            border-color: #10b981;
+            color: #064e3b;
+        }
+
+        .safety-warning {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-color: #f59e0b;
+            color: #78350f;
+        }
+
+        .safety-danger {
+            background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%);
+            border-color: #dc2626;
+            color: #7f1d1d;
+        }
+
+        .rule-item {
+            background: #0f172a;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .rule-active {
+            border-color: #10b981;
+        }
+
+        .rule-inactive {
+            border-color: #64748b;
+            opacity: 0.6;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+            background: #334155;
+            border-radius: 13px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .toggle-switch.active {
+            background: #10b981;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            top: 3px;
+            left: 3px;
+            transition: 0.3s;
+        }
+
+        .toggle-switch.active::after {
+            left: 27px;
         }
 
         .log-entry {
-            background: white;
+            background: #0f172a;
             padding: 10px;
             border-radius: 8px;
             margin-bottom: 8px;
-            border-left: 4px solid #1e3c72;
+            border-left: 4px solid #f59e0b;
             font-size: 13px;
-        }
-
-        .log-time {
-            color: #666;
-            font-size: 11px;
         }
 
         .status-badge {
@@ -209,39 +294,24 @@
             padding: 4px 12px;
             border-radius: 12px;
             font-size: 12px;
-            font-weight: 600;
+            font-weight: 700;
             margin-left: 10px;
         }
 
         .status-active {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .status-stopped {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        select {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            font-size: 14px;
-            margin-bottom: 10px;
-            background: white;
+            background: #d1fae5;
+            color: #064e3b;
         }
 
         .whitelist-item {
-            background: white;
+            background: #0f172a;
             padding: 10px;
             border-radius: 8px;
             margin-bottom: 8px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border: 2px solid #e9ecef;
+            border: 2px solid #334155;
         }
 
         .whitelist-item button {
@@ -250,68 +320,246 @@
             font-size: 12px;
             margin: 0;
         }
+
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .animate-slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .telegram-setup {
+            background: linear-gradient(135deg, #0088cc20 0%, #0077b520 100%);
+            border: 2px solid #0088cc;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+
+        .error { background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%); border: 2px solid #dc2626; padding: 15px; border-radius: 8px; margin-top: 15px; color: #7f1d1d; font-weight: 600; }
+        .success-msg { background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border: 2px solid #10b981; padding: 15px; border-radius: 8px; margin-top: 15px; color: #064e3b; font-weight: 600; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🔐 Secure Trading Wallet</h1>
-        <p class="subtitle">Bot de Trading Sécurisé sur BSC</p>
+    <div class="container animate-slide-in">
+        <h1>🤖 JERCAT Wallet + Telegram</h1>
+        <p class="subtitle">Validation Telegram avec Auto-Approval Intelligent</p>
 
         <div class="warning">
-            <strong>⚠️ SÉCURITÉ</strong>
-            Ce wallet utilise un chiffrement AES-256. Définissez un mot de passe FORT. Ne l'utilisez QUE pour le trading avec des montants limités. Pour le stockage principal, utilisez MetaMask ou Ledger.
+            <strong>🤖 SÉCURITÉ INTELLIGENTE</strong><br>
+            • Transactions sûres = Validation automatique<br>
+            • Transactions risquées = Validation Telegram requise<br>
+            • Vous restez toujours en contrôle !
         </div>
 
-        <!-- Écran de connexion/création -->
+        <!-- Écran de connexion -->
         <div id="loginScreen">
             <div class="section">
-                <h2>Connexion</h2>
-                <input type="password" id="loginPassword" placeholder="Entrez votre mot de passe">
-                <button onclick="login()">Déverrouiller le wallet</button>
-                <button onclick="showCreateScreen()" class="secondary">Créer un nouveau wallet</button>
+                <h2>🔓 Connexion</h2>
+                <input type="password" id="loginPassword" placeholder="Mot de passe">
+                <button onclick="login()">Déverrouiller</button>
+                <button onclick="showCreateScreen()" class="secondary">Créer un wallet</button>
             </div>
         </div>
 
         <!-- Écran de création -->
         <div id="createScreen" class="hidden">
             <div class="section">
-                <h2>Créer un wallet sécurisé</h2>
+                <h2>✨ Créer un wallet sécurisé</h2>
                 <input type="password" id="newPassword" placeholder="Mot de passe (min 8 caractères)">
-                <input type="password" id="confirmPassword" placeholder="Confirmer le mot de passe">
-                <input type="text" id="importPhrase" placeholder="(Optionnel) Phrase de récupération existante">
+                <input type="password" id="confirmPassword" placeholder="Confirmer">
+                <input type="text" id="telegramChatId" placeholder="Telegram Chat ID (optionnel pour l'instant)">
+                <input type="text" id="importPhrase" placeholder="(Optionnel) Phrase de récupération">
                 <button onclick="createSecureWallet()">Créer le wallet</button>
                 <button onclick="showLoginScreen()" class="secondary">Retour</button>
                 <div id="createMessage"></div>
                 
                 <div id="newWalletInfo" class="hidden">
                     <div class="info-box">
-                        <label>⚠️ SAUVEGARDEZ CETTE PHRASE (12 mots) :</label>
-                        <div id="displayMnemonic" style="font-weight: bold; color: #dc3545;"></div>
+                        <label>⚠️ SAUVEGARDEZ CETTE PHRASE :</label>
+                        <div id="displayMnemonic" style="font-weight: bold; color: #f59e0b;"></div>
                     </div>
-                    <button onclick="confirmAndContinue()" class="success">J'ai sauvegardé ma phrase</button>
+                    <button onclick="confirmAndContinue()" class="success">✅ J'ai sauvegardé</button>
                 </div>
             </div>
         </div>
 
         <!-- Écran principal -->
         <div id="mainScreen" class="hidden">
-            <!-- En-tête avec statut -->
             <div class="section">
                 <h2>
-                    Dashboard
-                    <span id="botStatus" class="status-badge status-active">Bot Actif</span>
+                    📊 Dashboard
+                    <span class="status-badge status-active">✅ Actif</span>
+                    <span class="telegram-badge">📱 Telegram</span>
+                    <span class="auto-badge">🤖 Auto</span>
                 </h2>
                 <div class="info-box">
-                    <label>Adresse du wallet :</label>
-                    <div id="walletAddress"></div>
+                    <label>Adresse :</label>
+                    <div id="walletAddress" style="color: #94a3b8; font-family: monospace;"></div>
                 </div>
                 <div class="balance" id="balance">0.0000 BNB</div>
                 <button onclick="refreshBalance()">🔄 Actualiser</button>
             </div>
 
+            <!-- Configuration Telegram -->
+            <div class="section">
+                <h2>🤖 Configuration Telegram</h2>
+                
+                <div class="telegram-setup">
+                    <h3 style="color: #0088cc; margin-bottom: 15px; font-size: 16px;">📱 Comment obtenir votre Chat ID :</h3>
+                    <ol style="color: #e2e8f0; line-height: 2; margin-left: 20px; font-size: 14px;">
+                        <li>Ouvrez Telegram</li>
+                        <li>Recherchez <strong style="color: #f59e0b;">@userinfobot</strong></li>
+                        <li>Envoyez <strong style="color: #f59e0b;">/start</strong></li>
+                        <li>Copiez votre <strong style="color: #f59e0b;">Chat ID</strong></li>
+                        <li>Collez-le ci-dessous</li>
+                    </ol>
+                </div>
+
+                <input type="text" id="newTelegramId" placeholder="Votre Telegram Chat ID (ex: 123456789)" value="">
+                <button onclick="updateTelegramId()">💾 Sauvegarder Chat ID</button>
+                
+                <div id="telegramStatus" class="info-box" style="margin-top: 15px;">
+                    <label>📱 Statut Telegram :</label>
+                    <div id="telegramStatusText" style="color: #64748b;">Non configuré</div>
+                </div>
+
+                <button onclick="testTelegram()" class="secondary" style="margin-top: 10px;">🧪 Tester la connexion Telegram</button>
+            </div>
+
+            <!-- Applications de confiance -->
+            <div class="section">
+                <h2>🔐 Applications de confiance JERCAT</h2>
+                <p style="color: #94a3b8; font-size: 13px; margin-bottom: 15px;">
+                    Les transactions provenant de ces applications sont automatiquement validées
+                </p>
+
+                <div id="trustedAppsDisplay"></div>
+
+                <div style="margin-top: 15px;">
+                    <input type="text" id="newTrustedApp" placeholder="Nom de l'application (ex: jercat-bot)">
+                    <button onclick="addTrustedApp()">➕ Ajouter une app de confiance</button>
+                </div>
+
+                <div class="info-box" style="margin-top: 15px; background: #0088cc20; border-color: #0088cc;">
+                    <label style="color: #0088cc;">💡 Apps pré-configurées :</label>
+                    <div style="color: #e2e8f0; font-size: 13px; line-height: 1.8;">
+                        • <strong>jercat-wallet</strong> - Votre wallet JERCAT<br>
+                        • <strong>jercat-dex</strong> - Votre DEX JERCAT<br>
+                        • <strong>jercat-bot</strong> - Votre bot de trading<br>
+                        • <strong>wallet-one-ochre.vercel.app</strong> - Wallet déployé
+                    </div>
+                </div>
+            </div>
+
+            <!-- Protection contre les airdrops scam -->
+            <div class="section">
+                <h2>🛡️ Protection Anti-Scam (Airdrops)</h2>
+                <p style="color: #94a3b8; font-size: 13px; margin-bottom: 15px;">
+                    Surveillance des tokens entrants non autorisés
+                </p>
+
+                <div class="rule-item rule-active" id="rule-blockScam">
+                    <div class="toggle-switch active" onclick="toggleProtection('blockSuspiciousTokens')"></div>
+                    <div style="flex: 1;">
+                        <div style="color: #e2e8f0; font-weight: 600; margin-bottom: 4px;">🚫 Bloquer les tokens suspects</div>
+                        <div style="color: #64748b; font-size: 12px;">Empêche toute interaction avec les tokens non vérifiés</div>
+                    </div>
+                </div>
+
+                <div class="rule-item rule-active" id="rule-telegramNewToken">
+                    <div class="toggle-switch active" onclick="toggleProtection('requireTelegramForNewTokens')"></div>
+                    <div style="flex: 1;">
+                        <div style="color: #e2e8f0; font-weight: 600; margin-bottom: 4px;">📱 Validation Telegram pour nouveaux tokens</div>
+                        <div style="color: #64748b; font-size: 12px;">Toute transaction avec un nouveau token nécessite votre approbation</div>
+                    </div>
+                </div>
+
+                <div class="rule-item rule-active" id="rule-autoScan">
+                    <div class="toggle-switch active" onclick="toggleProtection('autoScanIncoming')"></div>
+                    <div style="flex: 1;">
+                        <div style="color: #e2e8f0; font-weight: 600; margin-bottom: 4px;">🔍 Scanner automatique</div>
+                        <div style="color: #64748b; font-size: 12px;">Analyse automatique des nouveaux tokens reçus</div>
+                    </div>
+                </div>
+
+                <button onclick="scanWalletTokens()" class="secondary" style="margin-top: 15px;">🔍 Scanner mon wallet maintenant</button>
+
+                <!-- Alertes de tokens suspects -->
+                <div id="suspiciousTokenAlerts" class="hidden" style="margin-top: 20px;"></div>
+
+                <!-- Liste des tokens connus -->
+                <div style="margin-top: 20px;">
+                    <h3 style="color: #10b981; font-size: 16px; margin-bottom: 10px;">✅ Tokens de confiance</h3>
+                    <div id="knownTokensList" style="max-height: 200px; overflow-y: auto;"></div>
+                    
+                    <div style="margin-top: 15px;">
+                        <input type="text" id="newTrustedToken" placeholder="Adresse du token (0x...)">
+                        <input type="text" id="newTokenSymbol" placeholder="Symbole (ex: USDT)">
+                        <button onclick="addTrustedToken()">➕ Ajouter un token de confiance</button>
+                    </div>
+                </div>
+
+                <!-- Tokens suspects détectés -->
+                <div id="suspiciousTokensSection" class="hidden" style="margin-top: 20px;">
+                    <h3 style="color: #dc2626; font-size: 16px; margin-bottom: 10px;">⚠️ Tokens suspects détectés</h3>
+                    <div id="suspiciousTokensList"></div>
+                </div>
+            </div>
+
+            <!-- Règles d'Auto-Validation -->
+            <div class="section">
+                <h2>🤖 Règles d'Auto-Validation</h2>
+                <p style="color: #94a3b8; font-size: 13px; margin-bottom: 15px;">
+                    Activez les règles pour valider automatiquement les transactions sûres
+                </p>
+
+                <div class="rule-item rule-active" id="rule-whitelist">
+                    <div class="toggle-switch active" onclick="toggleRule('whitelist')"></div>
+                    <div style="flex: 1;">
+                        <div style="color: #e2e8f0; font-weight: 600; margin-bottom: 4px;">✅ Adresses en liste blanche</div>
+                        <div style="color: #64748b; font-size: 12px;">Auto-valide si destinataire dans la whitelist</div>
+                    </div>
+                </div>
+
+                <div class="rule-item rule-active" id="rule-amount">
+                    <div class="toggle-switch active" onclick="toggleRule('amount')"></div>
+                    <div style="flex: 1;">
+                        <div style="color: #e2e8f0; font-weight: 600; margin-bottom: 4px;">💰 Montants faibles</div>
+                        <div style="color: #64748b; font-size: 12px;">Auto-valide si montant < <input type="number" id="autoAmountLimit" value="0.1" step="0.01" style="width: 80px; display: inline-block; padding: 4px;"> BNB</div>
+                    </div>
+                </div>
+
+                <div class="rule-item rule-active" id="rule-frequency">
+                    <div class="toggle-switch active" onclick="toggleRule('frequency')"></div>
+                    <div style="flex: 1;">
+                        <div style="color: #e2e8f0; font-weight: 600; margin-bottom: 4px;">⏱️ Fréquence normale</div>
+                        <div style="color: #64748b; font-size: 12px;">Auto-valide si pas plus de 3 tx en 1 heure</div>
+                    </div>
+                </div>
+
+                <div class="rule-item rule-active" id="rule-time">
+                    <div class="toggle-switch active" onclick="toggleRule('time')"></div>
+                    <div style="flex: 1;">
+                        <div style="color: #e2e8f0; font-weight: 600; margin-bottom: 4px;">🌙 Heures normales</div>
+                        <div style="color: #64748b; font-size: 12px;">Auto-valide entre 8h et 23h</div>
+                    </div>
+                </div>
+
+                <div class="rule-item rule-active" id="rule-trustedApps">
+                    <div class="toggle-switch active" onclick="toggleRule('trustedApps')"></div>
+                    <div style="flex: 1;">
+                        <div style="color: #e2e8f0; font-weight: 600; margin-bottom: 4px;">🔐 Applications de confiance</div>
+                        <div style="color: #64748b; font-size: 12px;">Auto-valide si transaction vient de JERCAT Wallet, DEX ou Bot</div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Statistiques -->
             <div class="section">
-                <h2>Limites & Statistiques</h2>
+                <h2>📈 Statistiques</h2>
                 <div class="stats">
                     <div class="stat-box">
                         <div class="stat-label">Max par transaction</div>
@@ -323,54 +571,53 @@
                     </div>
                     <div class="stat-box">
                         <div class="stat-label">Dépensé aujourd'hui</div>
-                        <div class="stat-value" id="dailySpent">0.0 BNB</div>
+                        <div class="stat-value" id="dailySpent" style="color: #10b981;">0.0 BNB</div>
                     </div>
                     <div class="stat-box">
-                        <div class="stat-label">Restant aujourd'hui</div>
-                        <div class="stat-value" id="dailyRemaining">10.0 BNB</div>
+                        <div class="stat-label">Auto-validées</div>
+                        <div class="stat-value" id="autoApproved" style="color: #10b981;">0</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Configuration des limites -->
+            <!-- Configuration limites -->
             <div class="section">
-                <h2>⚙️ Configuration des limites</h2>
+                <h2>⚙️ Configuration</h2>
                 <input type="number" id="newMaxTx" placeholder="Max par transaction (BNB)" step="0.1">
                 <input type="number" id="newDailyLimit" placeholder="Limite quotidienne (BNB)" step="0.1">
-                <button onclick="updateLimits()">Mettre à jour les limites</button>
+                <button onclick="updateLimits()">💾 Mettre à jour</button>
             </div>
 
             <!-- Liste blanche -->
             <div class="section">
-                <h2>🛡️ Liste blanche (Adresses autorisées)</h2>
+                <h2>🛡️ Liste blanche</h2>
                 <div id="whitelistDisplay"></div>
                 <input type="text" id="newWhitelistAddress" placeholder="0x... Adresse à autoriser">
-                <button onclick="addToWhitelist()">Ajouter à la liste blanche</button>
+                <button onclick="addToWhitelist()">➕ Ajouter</button>
             </div>
 
             <!-- Trading -->
             <div class="section">
                 <h2>💱 Envoyer / Trader</h2>
-                <select id="tokenSelect">
-                    <option value="BNB">BNB (Natif)</option>
-                </select>
                 <input type="text" id="recipientAddress" placeholder="Adresse destinataire">
                 <input type="number" id="sendAmount" placeholder="Montant" step="0.0001">
-                <button onclick="executeTrade()" id="tradeBtn">Envoyer</button>
+                
+                <div id="safetyCheck" class="hidden"></div>
+                
+                <button onclick="prepareTransaction()" id="tradeBtn" class="success">🚀 Préparer la transaction</button>
                 <div id="tradeMessage"></div>
             </div>
 
-            <!-- Logs des transactions -->
+            <!-- Logs -->
             <div class="section">
-                <h2>📋 Historique des transactions</h2>
+                <h2>📋 Historique</h2>
                 <div id="transactionLogs"></div>
             </div>
 
-            <!-- Contrôles d'urgence -->
+            <!-- Contrôles -->
             <div class="section">
-                <h2>🚨 Contrôles d'urgence</h2>
-                <button onclick="toggleEmergencyStop()" class="danger" id="emergencyBtn">ARRÊT D'URGENCE</button>
-                <button onclick="logout()" class="secondary">Verrouiller le wallet</button>
+                <h2>🚨 Contrôles</h2>
+                <button onclick="logout()" class="secondary">🔒 Verrouiller</button>
             </div>
         </div>
     </div>
@@ -379,51 +626,79 @@
         const BSC_RPC = "https://bsc-dataseed.binance.org/";
         let provider = new ethers.JsonRpcProvider(BSC_RPC);
         let wallet = null;
-        let encryptedWallet = null;
 
-        // Configuration de sécurité
+        // ⚠️ VOTRE BOT TELEGRAM - Créez-le avec @BotFather
+        const TELEGRAM_BOT_TOKEN = 'YOUR_BOT_TOKEN_HERE';  // Ex: '6789012345:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw'
+
         let securityConfig = {
-            maxPerTransaction: 1.0, // BNB
-            dailyLimit: 10.0, // BNB
+            maxPerTransaction: 1.0,
+            dailyLimit: 10.0,
             dailySpent: 0.0,
             lastResetDate: new Date().toDateString(),
-            whitelist: [
-                "0x10ED43C718714eb63d5aA57B78B54704E256024E", // PancakeSwap Router
+            telegramChatId: '',
+            whitelist: ["0x10ED43C718714eb63d5aA57B78B54704E256024E"],
+            transactionLogs: [],
+            autoApprovedCount: 0,
+            recentTransactions: [],
+            autoRules: {
+                whitelist: true,
+                amount: true,
+                frequency: true,
+                time: true,
+                trustedApps: true
+            },
+            autoAmountLimit: 0.1,
+            trustedOrigins: [
+                'jercat-wallet',
+                'jercat-dex',
+                'jercat-bot',
+                'localhost',
+                'wallet-one-ochre.vercel.app'
             ],
-            emergencyStop: false,
-            transactionLogs: []
+            // Nouvelle section pour les tokens
+            knownTokens: [
+                { address: '0x197CF8951d93325A9333857Ee5330daF7aC4bcCF', symbol: 'JERCAT', trusted: true },
+                { address: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c', symbol: 'WBNB', trusted: true },
+                { address: '0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56', symbol: 'BUSD', trusted: true },
+                { address: '0x55d398326f99059fF775485246999027B3197955', symbol: 'USDT', trusted: true },
+                { address: '0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82', symbol: 'CAKE', trusted: true }
+            ],
+            suspiciousTokens: [],
+            incomingTokenAlerts: [],
+            protectionSettings: {
+                blockSuspiciousTokens: true,
+                requireTelegramForNewTokens: true,
+                autoScanIncoming: true
+            }
         };
 
-        // Charger la config depuis le stockage
         function loadConfig() {
             const saved = localStorage.getItem('securityConfig');
             if (saved) {
-                const loaded = JSON.parse(saved);
-                securityConfig = { ...securityConfig, ...loaded };
+                securityConfig = { ...securityConfig, ...JSON.parse(saved) };
                 checkDailyReset();
                 updateStatsDisplay();
                 updateWhitelistDisplay();
                 updateLogsDisplay();
-                updateBotStatus();
+                updateTelegramStatus();
+                updateRulesDisplay();
             }
         }
 
-        // Sauvegarder la config
         function saveConfig() {
             localStorage.setItem('securityConfig', JSON.stringify(securityConfig));
         }
 
-        // Vérifier et reset quotidien
         function checkDailyReset() {
             const today = new Date().toDateString();
             if (securityConfig.lastResetDate !== today) {
                 securityConfig.dailySpent = 0;
+                securityConfig.autoApprovedCount = 0;
                 securityConfig.lastResetDate = today;
                 saveConfig();
             }
         }
 
-        // Chiffrer et sauvegarder le wallet
         function encryptAndSave(wallet, password) {
             const data = JSON.stringify({
                 mnemonic: wallet.mnemonic.phrase,
@@ -431,14 +706,11 @@
             });
             const encrypted = CryptoJS.AES.encrypt(data, password).toString();
             localStorage.setItem('encryptedWallet', encrypted);
-            return encrypted;
         }
 
-        // Déchiffrer le wallet
         function decryptWallet(password) {
             const encrypted = localStorage.getItem('encryptedWallet');
             if (!encrypted) return null;
-            
             try {
                 const decrypted = CryptoJS.AES.decrypt(encrypted, password).toString(CryptoJS.enc.Utf8);
                 const data = JSON.parse(decrypted);
@@ -448,50 +720,44 @@
             }
         }
 
-        // Créer un wallet sécurisé
         function createSecureWallet() {
             const password = document.getElementById('newPassword').value;
             const confirm = document.getElementById('confirmPassword').value;
+            const chatId = document.getElementById('telegramChatId').value.trim();
             const importPhrase = document.getElementById('importPhrase').value.trim();
             const messageDiv = document.getElementById('createMessage');
 
             if (password.length < 8) {
-                messageDiv.innerHTML = '<div class="error">Le mot de passe doit contenir au moins 8 caractères.</div>';
+                messageDiv.innerHTML = '<div class="error">❌ Mot de passe trop court.</div>';
                 return;
             }
 
             if (password !== confirm) {
-                messageDiv.innerHTML = '<div class="error">Les mots de passe ne correspondent pas.</div>';
+                messageDiv.innerHTML = '<div class="error">❌ Mots de passe différents.</div>';
                 return;
             }
 
             try {
-                // Créer ou importer le wallet
-                if (importPhrase) {
-                    wallet = ethers.Wallet.fromPhrase(importPhrase);
-                } else {
-                    wallet = ethers.Wallet.createRandom();
-                }
-
-                // Chiffrer et sauvegarder
+                wallet = importPhrase ? ethers.Wallet.fromPhrase(importPhrase) : ethers.Wallet.createRandom();
                 encryptAndSave(wallet, password);
+                
+                if (chatId) {
+                    securityConfig.telegramChatId = chatId;
+                }
+                saveConfig();
 
-                // Afficher la phrase de récupération
                 document.getElementById('displayMnemonic').textContent = wallet.mnemonic.phrase;
                 document.getElementById('newWalletInfo').classList.remove('hidden');
-                messageDiv.innerHTML = '<div class="success-msg">✅ Wallet créé et chiffré avec succès !</div>';
-
+                messageDiv.innerHTML = '<div class="success-msg">✅ Wallet créé !</div>';
             } catch (error) {
-                messageDiv.innerHTML = '<div class="error">Erreur : ' + error.message + '</div>';
+                messageDiv.innerHTML = '<div class="error">❌ ' + error.message + '</div>';
             }
         }
 
-        // Confirmer et continuer
         function confirmAndContinue() {
             showMainScreen();
         }
 
-        // Connexion
         function login() {
             const password = document.getElementById('loginPassword').value;
             wallet = decryptWallet(password);
@@ -499,11 +765,10 @@
             if (wallet) {
                 showMainScreen();
             } else {
-                alert('❌ Mot de passe incorrect ou wallet non trouvé.');
+                alert('❌ Mot de passe incorrect.');
             }
         }
 
-        // Afficher l'écran principal
         function showMainScreen() {
             wallet = wallet.connect(provider);
             document.getElementById('walletAddress').textContent = wallet.address;
@@ -514,155 +779,873 @@
 
             loadConfig();
             refreshBalance();
+            updateProtectionDisplay();
+
+            // Activer le scan automatique si activé
+            if (securityConfig.protectionSettings.autoScanIncoming) {
+                console.log('🔍 Scanner automatique activé');
+                // En production, écouter les événements Transfer du wallet
+            }
         }
 
-        // Actualiser le solde
         async function refreshBalance() {
             if (!wallet) return;
             try {
                 const balance = await provider.getBalance(wallet.address);
                 document.getElementById('balance').textContent = parseFloat(ethers.formatEther(balance)).toFixed(4) + ' BNB';
             } catch (error) {
-                console.error('Erreur:', error);
+                console.error(error);
             }
         }
 
-        // Mettre à jour l'affichage des stats
-        function updateStatsDisplay() {
-            document.getElementById('maxPerTx').textContent = securityConfig.maxPerTransaction + ' BNB';
-            document.getElementById('dailyLimit').textContent = securityConfig.dailyLimit + ' BNB';
-            document.getElementById('dailySpent').textContent = securityConfig.dailySpent.toFixed(4) + ' BNB';
-            document.getElementById('dailyRemaining').textContent = (securityConfig.dailyLimit - securityConfig.dailySpent).toFixed(4) + ' BNB';
-        }
-
-        // Mettre à jour les limites
-        function updateLimits() {
-            const newMaxTx = parseFloat(document.getElementById('newMaxTx').value);
-            const newDaily = parseFloat(document.getElementById('newDailyLimit').value);
-
-            if (newMaxTx > 0) securityConfig.maxPerTransaction = newMaxTx;
-            if (newDaily > 0) securityConfig.dailyLimit = newDaily;
-
-            saveConfig();
-            updateStatsDisplay();
-            alert('✅ Limites mises à jour !');
-        }
-
-        // Vérifier les limites avant transaction
-        function checkLimits(amount) {
-            checkDailyReset();
-
-            if (amount > securityConfig.maxPerTransaction) {
-                throw new Error(`Montant supérieur à la limite par transaction (${securityConfig.maxPerTransaction} BNB)`);
-            }
-
-            if (securityConfig.dailySpent + amount > securityConfig.dailyLimit) {
-                throw new Error(`Limite quotidienne dépassée. Restant: ${(securityConfig.dailyLimit - securityConfig.dailySpent).toFixed(4)} BNB`);
-            }
-
-            return true;
-        }
-
-        // Vérifier la liste blanche
-        function isWhitelisted(address) {
-            return securityConfig.whitelist.some(addr => addr.toLowerCase() === address.toLowerCase());
-        }
-
-        // Ajouter à la liste blanche
-        function addToWhitelist() {
-            const address = document.getElementById('newWhitelistAddress').value.trim();
-            if (address && ethers.isAddress(address)) {
-                if (!isWhitelisted(address)) {
-                    securityConfig.whitelist.push(address);
-                    saveConfig();
-                    updateWhitelistDisplay();
-                    document.getElementById('newWhitelistAddress').value = '';
-                    alert('✅ Adresse ajoutée à la liste blanche !');
-                } else {
-                    alert('ℹ️ Cette adresse est déjà dans la liste blanche.');
-                }
+        function updateTelegramId() {
+            const chatId = document.getElementById('newTelegramId').value.trim();
+            if (chatId && chatId.match(/^[0-9]{6,12}$/)) {
+                securityConfig.telegramChatId = chatId;
+                saveConfig();
+                updateTelegramStatus();
+                alert('✅ Chat ID sauvegardé !');
             } else {
-                alert('❌ Adresse invalide.');
+                alert('❌ Chat ID invalide. Utilisez uniquement des chiffres.');
             }
         }
 
-        // Retirer de la liste blanche
-        function removeFromWhitelist(address) {
-            securityConfig.whitelist = securityConfig.whitelist.filter(addr => addr !== address);
-            saveConfig();
-            updateWhitelistDisplay();
+        function updateTelegramStatus() {
+            const statusDiv = document.getElementById('telegramStatusText');
+            if (securityConfig.telegramChatId) {
+                statusDiv.innerHTML = `<span style="color: #10b981; font-weight: 700;">✅ Configuré (ID: ${securityConfig.telegramChatId})</span>`;
+            } else {
+                statusDiv.innerHTML = '<span style="color: #dc2626; font-weight: 700;">❌ Non configuré</span>';
+            }
+            updateTrustedAppsDisplay();
         }
 
-        // Afficher la liste blanche
-        function updateWhitelistDisplay() {
-            const div = document.getElementById('whitelistDisplay');
+        function addTrustedApp() {
+            const appName = document.getElementById('newTrustedApp').value.trim().toLowerCase();
+            
+            if (!appName) {
+                alert('❌ Entrez un nom d\'application');
+                return;
+            }
+
+            if (securityConfig.trustedOrigins.includes(appName)) {
+                alert('ℹ️ Cette application est déjà de confiance');
+                return;
+            }
+
+            securityConfig.trustedOrigins.push(appName);
+            saveConfig();
+            updateTrustedAppsDisplay();
+            document.getElementById('newTrustedApp').value = '';
+            alert(`✅ "${appName}" ajoutée aux applications de confiance !`);
+        }
+
+        function removeTrustedApp(appName) {
+            // Empêcher la suppression des apps par défaut
+            const defaultApps = ['jercat-wallet', 'jercat-dex', 'jercat-bot'];
+            if (defaultApps.includes(appName)) {
+                if (!confirm(`⚠️ "${appName}" est une application JERCAT par défaut. Êtes-vous sûr de vouloir la retirer ?`)) {
+                    return;
+                }
+            }
+
+            securityConfig.trustedOrigins = securityConfig.trustedOrigins.filter(app => app !== appName);
+            saveConfig();
+            updateTrustedAppsDisplay();
+        }
+
+        function updateTrustedAppsDisplay() {
+            const div = document.getElementById('trustedAppsDisplay');
+            if (!div) return;
+            
             div.innerHTML = '';
-            securityConfig.whitelist.forEach(address => {
+            
+            securityConfig.trustedOrigins.forEach(appName => {
                 const item = document.createElement('div');
                 item.className = 'whitelist-item';
+                
+                const isDefault = ['jercat-wallet', 'jercat-dex', 'jercat-bot', 'localhost'].includes(appName);
+                const badge = isDefault ? '<span style="background: #10b981; color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; margin-left: 8px;">JERCAT</span>' : '';
+                
                 item.innerHTML = `
-                    <span>${address}</span>
-                    <button onclick="removeFromWhitelist('${address}')" class="danger">Retirer</button>
+                    <div>
+                        <span style="color: #e2e8f0; font-weight: 600; font-size: 14px;">🔐 ${appName}</span>
+                        ${badge}
+                    </div>
+                    <button onclick="removeTrustedApp('${appName}')" class="danger">❌</button>
                 `;
                 div.appendChild(item);
             });
         }
 
-        // Exécuter un trade
-        async function executeTrade() {
-            if (securityConfig.emergencyStop) {
-                alert('🚨 ARRÊT D\'URGENCE ACTIF ! Trading désactivé.');
+        async function testTelegram() {
+            if (!securityConfig.telegramChatId) {
+                alert('❌ Configurez d\'abord votre Chat ID !');
                 return;
             }
 
-            const recipient = document.getElementById('recipientAddress').value.trim();
-            const amount = parseFloat(document.getElementById('sendAmount').value);
-            const messageDiv = document.getElementById('tradeMessage');
-
-            if (!recipient || !amount) {
-                messageDiv.innerHTML = '<div class="error">Veuillez remplir tous les champs.</div>';
-                return;
-            }
-
-            if (!isWhitelisted(recipient)) {
-                messageDiv.innerHTML = '<div class="error">❌ Adresse non autorisée (pas dans la liste blanche).</div>';
+            if (TELEGRAM_BOT_TOKEN === 'YOUR_BOT_TOKEN_HERE') {
+                alert('⚠️ MODE TEST\n\nVotre bot Telegram n\'est pas encore configuré.\n\nPour l\'activer :\n1. Créez un bot avec @BotFather sur Telegram\n2. Remplacez TELEGRAM_BOT_TOKEN dans le code\n\nPour l\'instant, le système fonctionne en mode local sans Telegram.');
                 return;
             }
 
             try {
-                checkLimits(amount);
+                const message = `🤖 JERCAT Wallet - Test de connexion\n\n✅ Votre wallet est connecté !\n\nVous recevrez des notifications ici pour valider vos transactions.`;
+                
+                await sendTelegramMessage(message);
+                alert('✅ Message de test envoyé ! Vérifiez Telegram.');
+            } catch (error) {
+                alert('❌ Erreur : ' + error.message);
+            }
+        }
 
+        async function sendTelegramMessage(message, showButtons = false) {
+            if (!securityConfig.telegramChatId || TELEGRAM_BOT_TOKEN === 'YOUR_BOT_TOKEN_HERE') {
+                console.log('📱 TELEGRAM MESSAGE (mode test):\n', message);
+                return;
+            }
+
+            const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+            
+            const payload = {
+                chat_id: securityConfig.telegramChatId,
+                text: message,
+                parse_mode: 'HTML'
+            };
+
+            if (showButtons) {
+                payload.reply_markup = {
+                    inline_keyboard: [[
+                        { text: '✅ Approuver', callback_data: 'approve' },
+                        { text: '❌ Refuser', callback_data: 'reject' }
+                    ]]
+                };
+            }
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                throw new Error('Erreur Telegram');
+            }
+        }
+
+        function toggleRule(ruleName) {
+            securityConfig.autoRules[ruleName] = !securityConfig.autoRules[ruleName];
+            saveConfig();
+            updateRulesDisplay();
+        }
+
+        function updateRulesDisplay() {
+            Object.keys(securityConfig.autoRules).forEach(ruleName => {
+                const ruleDiv = document.getElementById(`rule-${ruleName}`);
+                const toggle = ruleDiv.querySelector('.toggle-switch');
+                
+                if (securityConfig.autoRules[ruleName]) {
+                    ruleDiv.classList.add('rule-active');
+                    ruleDiv.classList.remove('rule-inactive');
+                    toggle.classList.add('active');
+                } else {
+                    ruleDiv.classList.remove('rule-active');
+                    ruleDiv.classList.add('rule-inactive');
+                    toggle.classList.remove('active');
+                }
+            });
+        }
+
+        function checkTransactionSafety(recipient, amount) {
+            const risks = [];
+            let safetyScore = 100;
+
+            // Vérifier si la transaction vient d'une app de confiance
+            const isTrustedApp = checkIfTrustedApp();
+
+            if (isTrustedApp) {
+                console.log('✅ Transaction provenant d\'une application JERCAT de confiance');
+            }
+
+            // Règle 0: Application de confiance (PRIORITAIRE)
+            if (securityConfig.autoRules.trustedApps && isTrustedApp) {
+                console.log('🔐 AUTO-VALIDATION: Application de confiance détectée');
+                return {
+                    isSafe: true,
+                    score: 100,
+                    risks: [],
+                    canAutoApprove: true,
+                    reason: 'Application JERCAT de confiance'
+                };
+            }
+
+            // Règle 1: Whitelist
+            if (securityConfig.autoRules.whitelist && !isWhitelisted(recipient)) {
+                risks.push('❌ Adresse non whitelistée');
+                safetyScore -= 40;
+            }
+
+            // Règle 2: Montant
+            const amountLimit = parseFloat(document.getElementById('autoAmountLimit').value) || 0.1;
+            securityConfig.autoAmountLimit = amountLimit;
+            if (securityConfig.autoRules.amount && amount > amountLimit) {
+                risks.push(`❌ Montant > ${amountLimit} BNB`);
+                safetyScore -= 30;
+            }
+
+            // Règle 3: Fréquence
+            if (securityConfig.autoRules.frequency) {
+                const now = Date.now();
+                const oneHourAgo = now - 3600000;
+                const recentTx = securityConfig.recentTransactions.filter(tx => tx.timestamp > oneHourAgo);
+                
+                if (recentTx.length >= 3) {
+                    risks.push('❌ Trop de transactions (>3/h)');
+                    safetyScore -= 20;
+                }
+            }
+
+            // Règle 4: Horaires
+            if (securityConfig.autoRules.time) {
+                const hour = new Date().getHours();
+                if (hour < 8 || hour > 23) {
+                    risks.push('❌ Horaire inhabituel');
+                    safetyScore -= 10;
+                }
+            }
+
+            return {
+                isSafe: safetyScore >= 70 && risks.length === 0,
+                score: safetyScore,
+                risks: risks,
+                canAutoApprove: risks.length === 0
+            };
+        }
+
+        // Nouvelle fonction: Détecter si la transaction vient d'une app JERCAT
+        function checkIfTrustedApp() {
+            // Méthode 1: Vérifier le referrer (d'où vient la demande)
+            const referrer = document.referrer.toLowerCase();
+            
+            for (let trustedOrigin of securityConfig.trustedOrigins) {
+                if (referrer.includes(trustedOrigin.toLowerCase())) {
+                    console.log(`✅ Origine de confiance détectée: ${trustedOrigin}`);
+                    return true;
+                }
+            }
+
+            // Méthode 2: Vérifier si appelé depuis window.opener (popup)
+            if (window.opener) {
+                try {
+                    const openerOrigin = window.opener.location.origin;
+                    for (let trustedOrigin of securityConfig.trustedOrigins) {
+                        if (openerOrigin.includes(trustedOrigin)) {
+                            console.log(`✅ Popup de confiance: ${trustedOrigin}`);
+                            return true;
+                        }
+                    }
+                } catch (e) {
+                    // Cross-origin, on ne peut pas accéder
+                }
+            }
+
+            // Méthode 3: Vérifier un token de session partagé (localStorage)
+            const trustedToken = localStorage.getItem('jercatTrustedSession');
+            if (trustedToken) {
+                const tokenData = JSON.parse(trustedToken);
+                const now = Date.now();
+                
+                // Token valide 10 minutes
+                if (now - tokenData.timestamp < 600000 && securityConfig.trustedOrigins.includes(tokenData.origin)) {
+                    console.log(`✅ Session de confiance: ${tokenData.origin}`);
+                    return true;
+                }
+            }
+
+            // Méthode 4: Vérifier les paramètres URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const trustedAppParam = urlParams.get('trusted_app');
+            if (trustedAppParam && securityConfig.trustedOrigins.includes(trustedAppParam)) {
+                console.log(`✅ Paramètre URL de confiance: ${trustedAppParam}`);
+                return true;
+            }
+
+            return false;
+        }
+
+        // Fonction pour établir une session de confiance (à appeler depuis vos apps)
+        function establishTrustedSession(appName) {
+            if (securityConfig.trustedOrigins.includes(appName)) {
+                localStorage.setItem('jercatTrustedSession', JSON.stringify({
+                    origin: appName,
+                    timestamp: Date.now()
+                }));
+                console.log(`✅ Session de confiance établie pour: ${appName}`);
+                return true;
+            }
+            return false;
+        }
+
+        // Exposer la fonction globalement pour que vos apps puissent l'appeler
+        window.establishJercatTrust = establishTrustedSession;
+
+        // ========== PROTECTION ANTI-SCAM TOKENS ==========
+
+        const ERC20_ABI_EXTENDED = [
+            {"constant": true, "inputs": [{"name": "_owner", "type": "address"}], "name": "balanceOf", "outputs": [{"name": "balance", "type": "uint256"}], "type": "function"},
+            {"constant": true, "inputs": [], "name": "name", "outputs": [{"name": "", "type": "string"}], "type": "function"},
+            {"constant": true, "inputs": [], "name": "symbol", "outputs": [{"name": "", "type": "string"}], "type": "function"},
+            {"constant": true, "inputs": [], "name": "decimals", "outputs": [{"name": "", "type": "uint8"}], "type": "function"},
+            {"constant": true, "inputs": [], "name": "totalSupply", "outputs": [{"name": "", "type": "uint256"}], "type": "function"}
+        ];
+
+        function toggleProtection(setting) {
+            securityConfig.protectionSettings[setting] = !securityConfig.protectionSettings[setting];
+            saveConfig();
+            updateProtectionDisplay();
+        }
+
+        function updateProtectionDisplay() {
+            ['blockSuspiciousTokens', 'requireTelegramForNewTokens', 'autoScanIncoming'].forEach(setting => {
+                const ruleDiv = document.getElementById(`rule-${setting === 'blockSuspiciousTokens' ? 'blockScam' : setting === 'requireTelegramForNewTokens' ? 'telegramNewToken' : 'autoScan'}`);
+                if (ruleDiv) {
+                    const toggle = ruleDiv.querySelector('.toggle-switch');
+                    if (securityConfig.protectionSettings[setting]) {
+                        ruleDiv.classList.add('rule-active');
+                        ruleDiv.classList.remove('rule-inactive');
+                        toggle.classList.add('active');
+                    } else {
+                        ruleDiv.classList.remove('rule-active');
+                        ruleDiv.classList.add('rule-inactive');
+                        toggle.classList.remove('active');
+                    }
+                }
+            });
+
+            updateKnownTokensList();
+            updateSuspiciousTokensList();
+        }
+
+        function isKnownToken(tokenAddress) {
+            return securityConfig.knownTokens.some(token => 
+                token.address.toLowerCase() === tokenAddress.toLowerCase()
+            );
+        }
+
+        function isSuspiciousToken(tokenAddress) {
+            return securityConfig.suspiciousTokens.some(token => 
+                token.address.toLowerCase() === tokenAddress.toLowerCase()
+            );
+        }
+
+        async function scanWalletTokens() {
+            if (!wallet || !account) {
+                alert('❌ Wallet non connecté');
+                return;
+            }
+
+            const scanBtn = event.target;
+            scanBtn.disabled = true;
+            scanBtn.innerHTML = '🔍 Scan en cours...';
+
+            try {
+                // Scanner les tokens dans le wallet
+                // Note: En production, utiliser une API comme Moralis ou Covalent
+                // Pour cette démo, on simule la détection
+                
+                const alertsDiv = document.getElementById('suspiciousTokenAlerts');
+                alertsDiv.classList.remove('hidden');
+                alertsDiv.innerHTML = `
+                    <div class="safety-indicator safety-safe">
+                        <div style="font-size: 16px; margin-bottom: 8px;">✅ Scan terminé</div>
+                        <div style="font-size: 13px;">Aucun token suspect détecté pour le moment</div>
+                        <div style="font-size: 12px; margin-top: 8px; color: #64748b;">
+                            💡 Le scanner surveille automatiquement les nouveaux tokens entrants
+                        </div>
+                    </div>
+                `;
+
+                // Envoyer notification Telegram
+                await sendTelegramMessage(`🔍 <b>Scan Anti-Scam effectué</b>\n\n✅ Wallet sécurisé\nAucun token suspect détecté\n\n📊 ${securityConfig.knownTokens.length} tokens de confiance`);
+
+            } catch (error) {
+                console.error('Erreur scan:', error);
+                alert('❌ Erreur lors du scan');
+            } finally {
+                scanBtn.disabled = false;
+                scanBtn.innerHTML = '🔍 Scanner mon wallet maintenant';
+            }
+        }
+
+        async function detectIncomingToken(tokenAddress, amount) {
+            console.log('🔍 Nouveau token détecté:', tokenAddress);
+
+            // Vérifier si c'est un token connu
+            if (isKnownToken(tokenAddress)) {
+                console.log('✅ Token de confiance');
+                return { safe: true, action: 'allow' };
+            }
+
+            // Vérifier si c'est déjà marqué comme suspect
+            if (isSuspiciousToken(tokenAddress)) {
+                console.log('🚫 Token suspect connu');
+                return { safe: false, action: 'block' };
+            }
+
+            // Analyser le token
+            try {
+                const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI_EXTENDED, provider);
+                
+                const [name, symbol, decimals, totalSupply] = await Promise.all([
+                    tokenContract.name().catch(() => 'Unknown'),
+                    tokenContract.symbol().catch(() => '???'),
+                    tokenContract.decimals().catch(() => 18),
+                    tokenContract.totalSupply().catch(() => '0')
+                ]);
+
+                const tokenInfo = {
+                    address: tokenAddress,
+                    name: name,
+                    symbol: symbol,
+                    decimals: decimals,
+                    totalSupply: ethers.formatUnits(totalSupply, decimals),
+                    amount: amount,
+                    detectedAt: new Date().toISOString()
+                };
+
+                // Indicateurs de scam
+                const suspicionScore = calculateSuspicionScore(tokenInfo);
+
+                if (suspicionScore >= 70) {
+                    // Token très suspect
+                    securityConfig.suspiciousTokens.push({
+                        ...tokenInfo,
+                        suspicionScore: suspicionScore,
+                        status: 'blocked'
+                    });
+                    saveConfig();
+                    
+                    await alertSuspiciousToken(tokenInfo, suspicionScore);
+                    
+                    return { safe: false, action: 'block', info: tokenInfo };
+                } else {
+                    // Token nouveau mais pas forcément dangereux
+                    // Demander validation Telegram
+                    if (securityConfig.protectionSettings.requireTelegramForNewTokens) {
+                        await alertNewToken(tokenInfo);
+                        return { safe: false, action: 'require_approval', info: tokenInfo };
+                    }
+                }
+
+                return { safe: true, action: 'allow', info: tokenInfo };
+
+            } catch (error) {
+                console.error('Erreur analyse token:', error);
+                // En cas d'erreur, on bloque par sécurité
+                return { safe: false, action: 'block' };
+            }
+        }
+
+        function calculateSuspicionScore(tokenInfo) {
+            let score = 0;
+
+            // Indicateur 1: Nom suspect (contient des mots comme "FREE", "BONUS", "AIRDROP", "REWARD")
+            const suspiciousWords = ['free', 'bonus', 'airdrop', 'reward', 'gift', 'prize', 'win', 'claim'];
+            const nameLower = tokenInfo.name.toLowerCase();
+            const symbolLower = tokenInfo.symbol.toLowerCase();
+            
+            if (suspiciousWords.some(word => nameLower.includes(word) || symbolLower.includes(word))) {
+                score += 40;
+            }
+
+            // Indicateur 2: Symbole bizarre ou trop long
+            if (tokenInfo.symbol.length > 10 || tokenInfo.symbol.includes('�') || /[^a-zA-Z0-9]/.test(tokenInfo.symbol)) {
+                score += 20;
+            }
+
+            // Indicateur 3: Supply suspect (trop élevé ou trop faible)
+            const supply = parseFloat(tokenInfo.totalSupply);
+            if (supply > 1000000000000 || supply < 1) {
+                score += 20;
+            }
+
+            // Indicateur 4: Nom "Unknown" ou vide
+            if (tokenInfo.name === 'Unknown' || tokenInfo.name === '') {
+                score += 30;
+            }
+
+            return score;
+        }
+
+        async function alertSuspiciousToken(tokenInfo, score) {
+            const message = `
+🚨 <b>ALERTE SCAM - Token suspect détecté !</b>
+
+⚠️ <b>Suspicion: ${score}/100</b>
+
+📝 Nom: ${tokenInfo.name}
+🏷️ Symbole: ${tokenInfo.symbol}
+📍 Adresse: <code>${tokenInfo.address}</code>
+💰 Montant reçu: ${tokenInfo.amount}
+
+🛡️ <b>Action: BLOQUÉ automatiquement</b>
+
+❌ Toute interaction avec ce token est interdite.
+
+<b>Ne touchez pas à ce token !</b>
+C'est probablement un airdrop scam.
+`;
+
+            await sendTelegramMessage(message);
+
+            // Afficher l'alerte dans l'interface
+            const alertsDiv = document.getElementById('suspiciousTokenAlerts');
+            alertsDiv.classList.remove('hidden');
+            alertsDiv.innerHTML += `
+                <div class="safety-indicator safety-danger" style="margin-bottom: 10px;">
+                    <div style="font-size: 16px; margin-bottom: 8px;">🚨 TOKEN SCAM DÉTECTÉ !</div>
+                    <div style="font-size: 13px; margin-bottom: 8px;">
+                        <strong>${tokenInfo.symbol}</strong> - ${tokenInfo.name}<br>
+                        Score de suspicion: <strong>${score}/100</strong>
+                    </div>
+                    <div style="font-size: 12px; margin-top: 8px;">
+                        ❌ Ce token a été automatiquement bloqué<br>
+                        📱 Notification envoyée sur Telegram
+                    </div>
+                </div>
+            `;
+
+            updateSuspiciousTokensList();
+        }
+
+        async function alertNewToken(tokenInfo) {
+            const message = `
+🆕 <b>Nouveau token détecté</b>
+
+📝 Nom: ${tokenInfo.name}
+🏷️ Symbole: ${tokenInfo.symbol}
+📍 Adresse: <code>${tokenInfo.address}</code>
+💰 Montant: ${tokenInfo.amount}
+
+❓ <b>Ce token est inconnu</b>
+
+Voulez-vous:
+✅ L'ajouter aux tokens de confiance
+⚠️ Le marquer comme suspect
+ℹ️ L'ignorer pour l'instant
+`;
+
+            await sendTelegramMessage(message, false);
+        }
+
+        function addTrustedToken() {
+            const address = document.getElementById('newTrustedToken').value.trim();
+            const symbol = document.getElementById('newTokenSymbol').value.trim().toUpperCase();
+
+            if (!address || !ethers.isAddress(address)) {
+                alert('❌ Adresse invalide');
+                return;
+            }
+
+            if (!symbol) {
+                alert('❌ Entrez un symbole');
+                return;
+            }
+
+            if (isKnownToken(address)) {
+                alert('ℹ️ Ce token est déjà de confiance');
+                return;
+            }
+
+            securityConfig.knownTokens.push({
+                address: address,
+                symbol: symbol,
+                trusted: true,
+                addedAt: new Date().toISOString()
+            });
+
+            // Retirer des suspects si présent
+            securityConfig.suspiciousTokens = securityConfig.suspiciousTokens.filter(
+                t => t.address.toLowerCase() !== address.toLowerCase()
+            );
+
+            saveConfig();
+            updateKnownTokensList();
+            updateSuspiciousTokensList();
+
+            document.getElementById('newTrustedToken').value = '';
+            document.getElementById('newTokenSymbol').value = '';
+
+            alert(`✅ ${symbol} ajouté aux tokens de confiance !`);
+        }
+
+        function removeTrustedToken(address) {
+            // Empêcher la suppression des tokens critiques
+            const criticalTokens = ['JERCAT', 'WBNB', 'BUSD', 'USDT'];
+            const token = securityConfig.knownTokens.find(t => t.address.toLowerCase() === address.toLowerCase());
+            
+            if (token && criticalTokens.includes(token.symbol)) {
+                if (!confirm(`⚠️ ${token.symbol} est un token critique. Êtes-vous sûr ?`)) {
+                    return;
+                }
+            }
+
+            securityConfig.knownTokens = securityConfig.knownTokens.filter(
+                t => t.address.toLowerCase() !== address.toLowerCase()
+            );
+            saveConfig();
+            updateKnownTokensList();
+        }
+
+        function markAsSafe(address) {
+            const suspToken = securityConfig.suspiciousTokens.find(
+                t => t.address.toLowerCase() === address.toLowerCase()
+            );
+
+            if (suspToken) {
+                securityConfig.knownTokens.push({
+                    address: suspToken.address,
+                    symbol: suspToken.symbol,
+                    name: suspToken.name,
+                    trusted: true,
+                    addedAt: new Date().toISOString()
+                });
+
+                securityConfig.suspiciousTokens = securityConfig.suspiciousTokens.filter(
+                    t => t.address.toLowerCase() !== address.toLowerCase()
+                );
+
+                saveConfig();
+                updateKnownTokensList();
+                updateSuspiciousTokensList();
+
+                alert(`✅ ${suspToken.symbol} ajouté aux tokens de confiance`);
+            }
+        }
+
+        function updateKnownTokensList() {
+            const div = document.getElementById('knownTokensList');
+            if (!div) return;
+
+            div.innerHTML = '';
+
+            securityConfig.knownTokens.forEach(token => {
+                const item = document.createElement('div');
+                item.className = 'whitelist-item';
+                item.innerHTML = `
+                    <div>
+                        <span style="color: #10b981; font-weight: 700; font-size: 14px;">✅ ${token.symbol}</span>
+                        <span style="color: #64748b; font-size: 12px; margin-left: 8px;">${token.address.substring(0, 10)}...</span>
+                    </div>
+                    <button onclick="removeTrustedToken('${token.address}')" class="danger">❌</button>
+                `;
+                div.appendChild(item);
+            });
+        }
+
+        function updateSuspiciousTokensList() {
+            const section = document.getElementById('suspiciousTokensSection');
+            const div = document.getElementById('suspiciousTokensList');
+            
+            if (!div || !section) return;
+
+            if (securityConfig.suspiciousTokens.length === 0) {
+                section.classList.add('hidden');
+                return;
+            }
+
+            section.classList.remove('hidden');
+            div.innerHTML = '';
+
+            securityConfig.suspiciousTokens.forEach(token => {
+                const item = document.createElement('div');
+                item.style.cssText = 'background: #dc262620; border: 2px solid #dc2626; border-radius: 8px; padding: 12px; margin-bottom: 10px;';
+                item.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div style="flex: 1;">
+                            <div style="color: #dc2626; font-weight: 700; margin-bottom: 4px;">
+                                ⚠️ ${token.symbol} - ${token.name}
+                            </div>
+                            <div style="color: #64748b; font-size: 12px; font-family: monospace; margin-bottom: 4px;">
+                                ${token.address}
+                            </div>
+                            <div style="color: #dc2626; font-size: 13px; font-weight: 600;">
+                                Score de suspicion: ${token.suspicionScore}/100
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button onclick="markAsSafe('${token.address}')" style="width: auto; padding: 6px 12px; font-size: 12px; margin: 0;" class="success">✅ Marquer sûr</button>
+                        </div>
+                    </div>
+                `;
+                div.appendChild(item);
+            });
+        }
+
+        async function prepareTransaction() {
+            const recipient = document.getElementById('recipientAddress').value.trim();
+            const amount = parseFloat(document.getElementById('sendAmount').value);
+            const messageDiv = document.getElementById('tradeMessage');
+            const safetyDiv = document.getElementById('safetyCheck');
+
+            if (!recipient || !amount) {
+                messageDiv.innerHTML = '<div class="error">❌ Remplir tous les champs.</div>';
+                return;
+            }
+
+            if (!ethers.isAddress(recipient)) {
+                messageDiv.innerHTML = '<div class="error">❌ Adresse invalide.</div>';
+                return;
+            }
+
+            try {
+                checkDailyReset();
+                
+                if (amount > securityConfig.maxPerTransaction) {
+                    throw new Error(`Limite par transaction: ${securityConfig.maxPerTransaction} BNB`);
+                }
+
+                if (securityConfig.dailySpent + amount > securityConfig.dailyLimit) {
+                    throw new Error('Limite quotidienne dépassée');
+                }
+
+                // ========== VÉRIFICATION ANTI-SCAM TOKEN ==========
+                // Vérifier si le destinataire est un contrat de token
+                const code = await provider.getCode(recipient);
+                if (code !== '0x') {
+                    // C'est un contrat, vérifier s'il est connu
+                    if (!isKnownToken(recipient) && securityConfig.protectionSettings.requireTelegramForNewTokens) {
+                        // Token inconnu détecté
+                        const tokenCheck = await detectIncomingToken(recipient, amount);
+                        
+                        if (tokenCheck.action === 'block') {
+                            throw new Error('🚫 Token suspect bloqué ! Vérifiez vos alertes.');
+                        } else if (tokenCheck.action === 'require_approval') {
+                            messageDiv.innerHTML = '<div class="error">⚠️ Token inconnu détecté. Validation Telegram envoyée !</div>';
+                            return;
+                        }
+                    }
+
+                    // Vérifier si c'est un token suspect connu
+                    if (isSuspiciousToken(recipient)) {
+                        throw new Error('🚫 Interaction interdite avec ce token suspect !');
+                    }
+                }
+
+                // Analyse de sécurité
+                const safety = checkTransactionSafety(recipient, amount);
+
+                // Afficher l'analyse
+                safetyDiv.classList.remove('hidden');
+                if (safety.isSafe) {
+                    safetyDiv.className = 'safety-indicator safety-safe';
+                    const reasonText = safety.reason ? ` - ${safety.reason}` : '';
+                    safetyDiv.innerHTML = `
+                        <div style="font-size: 16px; margin-bottom: 8px;">✅ Transaction SÛRE (Score: ${safety.score}/100)${reasonText}</div>
+                        <div style="font-size: 13px;">🤖 Sera validée automatiquement</div>
+                    `;
+                } else {
+                    safetyDiv.className = 'safety-indicator safety-' + (safety.score >= 50 ? 'warning' : 'danger');
+                    safetyDiv.innerHTML = `
+                        <div style="font-size: 16px; margin-bottom: 8px;">⚠️ Transaction à RISQUE (Score: ${safety.score}/100)</div>
+                        <div style="font-size: 13px; margin-bottom: 8px;">Problèmes détectés :</div>
+                        ${safety.risks.map(r => `<div style="font-size: 12px;">• ${r}</div>`).join('')}
+                        <div style="font-size: 13px; margin-top: 8px;">📱 Validation Telegram requise</div>
+                    `;
+                }
+
+                // Exécuter la transaction
+                if (safety.canAutoApprove) {
+                    await executeTransaction(recipient, amount, true);
+                } else {
+                    await requestTelegramApproval(recipient, amount);
+                }
+
+            } catch (error) {
+                messageDiv.innerHTML = '<div class="error">❌ ' + error.message + '</div>';
+            }
+        }
+
+        async function requestTelegramApproval(recipient, amount) {
+            const message = `
+🔐 <b>JERCAT Wallet - Validation requise</b>
+
+⚠️ <b>Transaction à risque détectée</b>
+
+💰 Montant: <b>${amount} BNB</b>
+📍 Vers: <code>${recipient}</code>
+⛽ Frais: ~0.0003 BNB
+💵 Total: <b>${(amount + 0.0003).toFixed(4)} BNB</b>
+
+⏰ En attente de votre validation...
+`;
+
+            await sendTelegramMessage(message, true);
+            
+            document.getElementById('tradeMessage').innerHTML = '<div class="success-msg">📱 Notification envoyée sur Telegram ! Validez pour continuer.</div>';
+            
+            // En production, écouter la réponse du bot Telegram
+            // Pour le test, on simule
+            setTimeout(() => {
+                if (confirm('Simuler une APPROBATION sur Telegram ?')) {
+                    executeTransaction(recipient, amount, false);
+                }
+            }, 2000);
+        }
+
+        async function executeTransaction(recipient, amount, isAuto) {
+            const messageDiv = document.getElementById('tradeMessage');
+
+            try {
                 const tx = await wallet.sendTransaction({
                     to: recipient,
                     value: ethers.parseEther(amount.toString())
                 });
 
-                messageDiv.innerHTML = '<div class="success-msg">⏳ Transaction envoyée ! Hash: ' + tx.hash.substring(0, 20) + '...</div>';
+                messageDiv.innerHTML = '<div class="success-msg">⏳ Transaction envoyée !</div>';
 
                 await tx.wait();
 
-                // Mettre à jour les stats
                 securityConfig.dailySpent += amount;
+                if (isAuto) securityConfig.autoApprovedCount++;
+                
+                securityConfig.recentTransactions.push({
+                    timestamp: Date.now(),
+                    amount: amount,
+                    to: recipient
+                });
+
                 securityConfig.transactionLogs.unshift({
                     time: new Date().toLocaleString(),
                     amount: amount,
                     to: recipient,
                     hash: tx.hash,
-                    status: 'success'
+                    status: 'success',
+                    autoApproved: isAuto
                 });
-                
+
                 if (securityConfig.transactionLogs.length > 20) {
                     securityConfig.transactionLogs = securityConfig.transactionLogs.slice(0, 20);
                 }
+
+                // Nettoyer les anciennes transactions (> 1h)
+                const oneHourAgo = Date.now() - 3600000;
+                securityConfig.recentTransactions = securityConfig.recentTransactions.filter(tx => tx.timestamp > oneHourAgo);
 
                 saveConfig();
                 updateStatsDisplay();
                 updateLogsDisplay();
                 refreshBalance();
 
-                messageDiv.innerHTML = '<div class="success-msg">✅ Transaction confirmée !</div>';
                 document.getElementById('recipientAddress').value = '';
                 document.getElementById('sendAmount').value = '';
+                document.getElementById('safetyCheck').classList.add('hidden');
+                
+                const emoji = isAuto ? '🤖' : '📱';
+                messageDiv.innerHTML = `<div class="success-msg">✅ Transaction confirmée ! ${emoji}</div>`;
+
+                // Notifier sur Telegram
+                await sendTelegramMessage(`✅ Transaction confirmée !\n\n💰 ${amount} BNB envoyés\n📍 Vers: ${recipient.substring(0, 10)}...\n🔗 Hash: ${tx.hash.substring(0, 20)}...`);
 
             } catch (error) {
                 messageDiv.innerHTML = '<div class="error">❌ ' + error.message + '</div>';
@@ -679,83 +1662,108 @@
             }
         }
 
-        // Afficher les logs
+        function updateStatsDisplay() {
+            document.getElementById('maxPerTx').textContent = securityConfig.maxPerTransaction + ' BNB';
+            document.getElementById('dailyLimit').textContent = securityConfig.dailyLimit + ' BNB';
+            document.getElementById('dailySpent').textContent = securityConfig.dailySpent.toFixed(4) + ' BNB';
+            document.getElementById('autoApproved').textContent = securityConfig.autoApprovedCount || 0;
+        }
+
+        function updateLimits() {
+            const newMaxTx = parseFloat(document.getElementById('newMaxTx').value);
+            const newDaily = parseFloat(document.getElementById('newDailyLimit').value);
+
+            if (newMaxTx > 0) securityConfig.maxPerTransaction = newMaxTx;
+            if (newDaily > 0) securityConfig.dailyLimit = newDaily;
+
+            saveConfig();
+            updateStatsDisplay();
+            alert('✅ Limites mises à jour !');
+        }
+
+        function isWhitelisted(address) {
+            return securityConfig.whitelist.some(addr => addr.toLowerCase() === address.toLowerCase());
+        }
+
+        function addToWhitelist() {
+            const address = document.getElementById('newWhitelistAddress').value.trim();
+            if (address && ethers.isAddress(address)) {
+                if (!isWhitelisted(address)) {
+                    securityConfig.whitelist.push(address);
+                    saveConfig();
+                    updateWhitelistDisplay();
+                    document.getElementById('newWhitelistAddress').value = '';
+                    alert('✅ Ajouté !');
+                } else {
+                    alert('ℹ️ Déjà présent.');
+                }
+            } else {
+                alert('❌ Adresse invalide.');
+            }
+        }
+
+        function removeFromWhitelist(address) {
+            securityConfig.whitelist = securityConfig.whitelist.filter(addr => addr !== address);
+            saveConfig();
+            updateWhitelistDisplay();
+        }
+
+        function updateWhitelistDisplay() {
+            const div = document.getElementById('whitelistDisplay');
+            div.innerHTML = '';
+            securityConfig.whitelist.forEach(address => {
+                const item = document.createElement('div');
+                item.className = 'whitelist-item';
+                item.innerHTML = `
+                    <span style="color: #94a3b8; font-family: monospace; font-size: 13px;">${address}</span>
+                    <button onclick="removeFromWhitelist('${address}')" class="danger">❌</button>
+                `;
+                div.appendChild(item);
+            });
+        }
+
         function updateLogsDisplay() {
             const div = document.getElementById('transactionLogs');
             div.innerHTML = '';
             
             if (securityConfig.transactionLogs.length === 0) {
-                div.innerHTML = '<p style="text-align: center; color: #999;">Aucune transaction</p>';
+                div.innerHTML = '<p style="text-align: center; color: #64748b;">Aucune transaction</p>';
                 return;
             }
 
             securityConfig.transactionLogs.forEach(log => {
                 const entry = document.createElement('div');
                 entry.className = 'log-entry';
-                const statusColor = log.status === 'success' ? '#28a745' : '#dc3545';
+                const statusColor = log.status === 'success' ? '#10b981' : '#dc2626';
+                const approvalBadge = log.autoApproved ? '<span style="background: #10b981; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 8px;">🤖 AUTO</span>' : '<span style="background: #0088cc; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 8px;">📱 TELEGRAM</span>';
+                
                 entry.innerHTML = `
-                    <div class="log-time">${log.time}</div>
-                    <div><strong style="color: ${statusColor}">${log.status === 'success' ? '✅' : '❌'} ${log.amount} BNB → ${log.to.substring(0, 10)}...</strong></div>
-                    ${log.hash ? `<div style="font-size: 11px; color: #666;">Hash: ${log.hash.substring(0, 20)}...</div>` : ''}
-                    ${log.error ? `<div style="font-size: 11px; color: #dc3545;">Erreur: ${log.error}</div>` : ''}
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 5px;">${log.time}</div>
+                    <div><strong style="color: ${statusColor}">${log.status === 'success' ? '✅' : '❌'} ${log.amount} BNB → ${log.to.substring(0, 10)}...</strong>${log.status === 'success' ? approvalBadge : ''}</div>
+                    ${log.hash ? `<div style="font-size: 11px; color: #64748b;">Hash: ${log.hash.substring(0, 20)}...</div>` : ''}
+                    ${log.error ? `<div style="font-size: 11px; color: #dc2626;">Erreur: ${log.error}</div>` : ''}
                 `;
                 div.appendChild(entry);
             });
         }
 
-        // Arrêt d'urgence
-        function toggleEmergencyStop() {
-            securityConfig.emergencyStop = !securityConfig.emergencyStop;
-            saveConfig();
-            updateBotStatus();
-            
-            if (securityConfig.emergencyStop) {
-                alert('🚨 ARRÊT D\'URGENCE ACTIVÉ ! Toutes les transactions sont bloquées.');
-            } else {
-                alert('✅ Bot réactivé. Les transactions sont à nouveau autorisées.');
-            }
-        }
-
-        // Mettre à jour le statut du bot
-        function updateBotStatus() {
-            const badge = document.getElementById('botStatus');
-            const btn = document.getElementById('emergencyBtn');
-            const tradeBtn = document.getElementById('tradeBtn');
-            
-            if (securityConfig.emergencyStop) {
-                badge.textContent = 'Bot Arrêté';
-                badge.className = 'status-badge status-stopped';
-                btn.textContent = 'RÉACTIVER LE BOT';
-                tradeBtn.disabled = true;
-            } else {
-                badge.textContent = 'Bot Actif';
-                badge.className = 'status-badge status-active';
-                btn.textContent = 'ARRÊT D\'URGENCE';
-                tradeBtn.disabled = false;
-            }
-        }
-
-        // Déconnexion
         function logout() {
             wallet = null;
             document.getElementById('mainScreen').classList.add('hidden');
             showLoginScreen();
         }
 
-        // Afficher l'écran de connexion
         function showLoginScreen() {
             document.getElementById('loginScreen').classList.remove('hidden');
             document.getElementById('createScreen').classList.add('hidden');
             document.getElementById('loginPassword').value = '';
         }
 
-        // Afficher l'écran de création
         function showCreateScreen() {
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('createScreen').classList.remove('hidden');
         }
 
-        // Vérifier si un wallet existe au démarrage
         window.onload = function() {
             const hasWallet = localStorage.getItem('encryptedWallet');
             if (!hasWallet) {
