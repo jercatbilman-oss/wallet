@@ -403,6 +403,49 @@
                 <button onclick="refreshBalance()">🔄 Actualiser</button>
             </div>
 
+            <!-- Liste des tokens -->
+            <div class="section">
+                <h2>🪙 Mes Tokens</h2>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;" id="tokenBalances">
+                    <div style="text-align: center; color: #64748b; padding: 20px;">
+                        Chargement des tokens...
+                    </div>
+                </div>
+
+                <hr style="border: 1px solid #334155; margin: 20px 0;">
+
+                <h3 style="color: #f59e0b; font-size: 16px; margin-bottom: 15px;">➕ Ajouter un token</h3>
+                
+                <div style="background: #0f172a; padding: 15px; border-radius: 8px; border: 2px solid #334155; margin-bottom: 15px;">
+                    <label style="color: #94a3b8; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">
+                        Adresse du contrat token :
+                    </label>
+                    <input type="text" id="tokenAddressInput" placeholder="0x... (ex: 0x55d398326f99059fF775485246999027B3197955 pour USDT)" 
+                           style="font-family: monospace; font-size: 13px;">
+                    
+                    <button onclick="addTokenByAddress()" style="margin-top: 10px;">
+                        🔍 Rechercher et ajouter ce token
+                    </button>
+
+                    <div id="tokenSearchResult" style="margin-top: 15px;"></div>
+                </div>
+
+                <div class="info-box" style="background: #10b98120; border-color: #10b981;">
+                    <label style="color: #10b981;">💡 Tokens populaires sur BSC :</label>
+                    <div style="color: #e2e8f0; font-size: 13px; line-height: 1.8; margin-top: 8px;">
+                        <strong>USDT:</strong> <code style="background: #0f172a; padding: 2px 6px; border-radius: 4px; font-size: 11px;">0x55d398326f99059fF775485246999027B3197955</code><br>
+                        <strong>USDC:</strong> <code style="background: #0f172a; padding: 2px 6px; border-radius: 4px; font-size: 11px;">0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d</code><br>
+                        <strong>BUSD:</strong> <code style="background: #0f172a; padding: 2px 6px; border-radius: 4px; font-size: 11px;">0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56</code><br>
+                        <strong>CAKE:</strong> <code style="background: #0f172a; padding: 2px 6px; border-radius: 4px; font-size: 11px;">0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82</code>
+                    </div>
+                </div>
+
+                <button onclick="refreshAllTokens()" class="secondary" style="margin-top: 15px;">
+                    🔄 Rafraîchir tous les tokens
+                </button>
+            </div>
+
             <!-- Configuration Telegram -->
             <div class="section">
                 <h2>🤖 Configuration Telegram Bot</h2>
@@ -457,7 +500,17 @@
                     <div id="telegramStatusText" style="color: #64748b;">Non configuré</div>
                 </div>
 
-                <button onclick="testTelegram()" class="secondary" style="margin-top: 15px;">🧪 Tester la connexion Telegram</button>
+                <hr style="border: 1px solid #334155; margin: 20px 0;">
+
+                <h3 style="color: #10b981; margin-bottom: 15px; font-size: 16px;">🧪 Tests & Diagnostic</h3>
+
+                <button onclick="testTelegram()" class="secondary" style="margin-bottom: 10px;">🧪 Test 1: Tester la connexion Telegram</button>
+
+                <button onclick="checkRecentTransactions()" class="secondary" style="margin-bottom: 10px;">🔍 Test 2: Vérifier mes transactions récentes</button>
+
+                <button onclick="sendTestNotification()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); margin-bottom: 10px;">📱 Test 3: Envoyer une notification de test</button>
+
+                <div id="diagnosticResults" style="margin-top: 15px;"></div>
                 
                 <div class="warning" style="margin-top: 20px;">
                     <strong>⚠️ SÉCURITÉ</strong><br>
@@ -600,7 +653,19 @@
 
             <!-- Statistiques -->
             <div class="section">
-                <h2>📈 Statistiques</h2>
+                <h2>📈 Statistiques & Monitoring</h2>
+                
+                <div class="info-box" style="margin-bottom: 15px;">
+                    <label>🔍 Surveillance des transactions :</label>
+                    <div id="monitoringStatus" style="color: #10b981; font-weight: 700; margin-top: 8px;">
+                        ⏳ Initialisation...
+                    </div>
+                </div>
+
+                <button onclick="forceCheckTransactions()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); margin-bottom: 15px;">
+                    🔄 Vérifier les nouvelles transactions MAINTENANT
+                </button>
+
                 <div class="stats">
                     <div class="stat-box">
                         <div class="stat-label">Max par transaction</div>
@@ -618,6 +683,11 @@
                         <div class="stat-label">Auto-validées</div>
                         <div class="stat-value" id="autoApproved" style="color: #10b981;">0</div>
                     </div>
+                </div>
+
+                <div id="lastCheckInfo" class="info-box" style="margin-top: 15px;">
+                    <label>Dernière vérification :</label>
+                    <div id="lastCheckTime" style="color: #64748b; font-size: 12px;">Jamais</div>
                 </div>
             </div>
 
@@ -820,7 +890,7 @@
             document.getElementById('mainScreen').classList.remove('hidden');
 
             loadConfig();
-            refreshBalance();
+            refreshBalance(); // Charge aussi les tokens
             updateProtectionDisplay();
             updateBotTokenStatus();
             updateTelegramStatus();
@@ -845,53 +915,146 @@
 
             // Obtenir le dernier bloc vérifié
             const currentBlock = await provider.getBlockNumber();
-            lastCheckedBlock = localStorage.getItem('lastCheckedBlock') 
-                ? parseInt(localStorage.getItem('lastCheckedBlock')) 
-                : currentBlock - 100; // Scanner les 100 derniers blocs au démarrage
+            
+            // Charger depuis le stockage OU scanner les 1000 derniers blocs
+            const savedBlock = localStorage.getItem('lastCheckedBlock');
+            if (savedBlock) {
+                lastCheckedBlock = parseInt(savedBlock);
+            } else {
+                lastCheckedBlock = currentBlock - 1000; // Scanner les 1000 derniers blocs au démarrage
+            }
 
-            // Vérifier toutes les 15 secondes
+            updateMonitoringStatus(`✅ Actif - Dernier bloc: ${currentBlock}`);
+
+            // Vérifier immédiatement au démarrage
+            await checkNewTransactions(walletAddress);
+
+            // Puis vérifier toutes les 10 secondes (plus rapide!)
             monitoringInterval = setInterval(async () => {
                 try {
                     await checkNewTransactions(walletAddress);
                 } catch (error) {
                     console.error('Erreur monitoring:', error);
+                    updateMonitoringStatus(`⚠️ Erreur: ${error.message}`);
                 }
-            }, 15000); // 15 secondes
+            }, 10000); // 10 secondes
+        }
 
-            // Première vérification immédiate
-            await checkNewTransactions(walletAddress);
+        function updateMonitoringStatus(message) {
+            const statusDiv = document.getElementById('monitoringStatus');
+            if (statusDiv) {
+                statusDiv.textContent = message;
+            }
+            
+            const lastCheckDiv = document.getElementById('lastCheckTime');
+            if (lastCheckDiv) {
+                lastCheckDiv.textContent = new Date().toLocaleString('fr-FR');
+            }
+        }
+
+        async function forceCheckTransactions() {
+            if (!wallet) {
+                alert('❌ Wallet non déverrouillé');
+                return;
+            }
+
+            const btn = event.target;
+            btn.disabled = true;
+            btn.innerHTML = '🔍 Vérification en cours...';
+
+            try {
+                updateMonitoringStatus('🔍 Vérification forcée en cours...');
+                
+                const currentBlock = await provider.getBlockNumber();
+                
+                // Scanner les 2000 derniers blocs (~1.5 heures)
+                const startBlock = currentBlock - 2000;
+                lastCheckedBlock = startBlock;
+                
+                console.log(`🔍 Scan forcé des blocs ${startBlock} à ${currentBlock}`);
+                
+                await checkNewTransactions(wallet.address);
+                
+                updateMonitoringStatus(`✅ Scan terminé - Bloc actuel: ${currentBlock}`);
+                alert('✅ Vérification terminée ! Si des transactions ont été trouvées, vous avez reçu des notifications.');
+                
+            } catch (error) {
+                console.error('Erreur scan forcé:', error);
+                updateMonitoringStatus(`❌ Erreur: ${error.message}`);
+                alert('❌ Erreur: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '🔄 Vérifier les nouvelles transactions MAINTENANT';
+            }
         }
 
         async function checkNewTransactions(walletAddress) {
             const currentBlock = await provider.getBlockNumber();
             
-            console.log(`🔍 Scan des blocs ${lastCheckedBlock} à ${currentBlock}`);
+            if (!lastCheckedBlock) {
+                lastCheckedBlock = currentBlock - 100;
+            }
 
-            // Scanner les blocs depuis le dernier vérifié
-            for (let blockNumber = lastCheckedBlock + 1; blockNumber <= currentBlock; blockNumber++) {
+            const blocksToCheck = currentBlock - lastCheckedBlock;
+            
+            console.log(`🔍 Scan des blocs ${lastCheckedBlock + 1} à ${currentBlock} (${blocksToCheck} blocs)`);
+            updateMonitoringStatus(`🔍 Scan de ${blocksToCheck} nouveaux blocs...`);
+
+            let foundCount = 0;
+
+            // Scanner par batch de 100 blocs pour plus de rapidité
+            const batchSize = 100;
+            for (let batchStart = lastCheckedBlock + 1; batchStart <= currentBlock; batchStart += batchSize) {
+                const batchEnd = Math.min(batchStart + batchSize - 1, currentBlock);
+                
                 try {
-                    const block = await provider.getBlock(blockNumber, true);
+                    // Utiliser l'API BSCScan pour plus de rapidité (en production)
+                    // Pour l'instant, on continue avec getBlock
                     
-                    if (block && block.transactions) {
-                        for (let txHash of block.transactions) {
-                            // Si c'est un hash (pas un objet transaction complet)
-                            if (typeof txHash === 'string') {
-                                const tx = await provider.getTransaction(txHash);
-                                if (tx && tx.from && tx.from.toLowerCase() === walletAddress.toLowerCase()) {
-                                    await handleExternalTransaction(tx);
+                    for (let blockNumber = batchStart; blockNumber <= batchEnd; blockNumber++) {
+                        try {
+                            const block = await provider.getBlock(blockNumber, true);
+                            
+                            if (block && block.transactions) {
+                                for (let tx of block.transactions) {
+                                    // Vérifier si c'est une transaction de notre wallet
+                                    if (typeof tx === 'object' && tx.from && tx.from.toLowerCase() === walletAddress.toLowerCase()) {
+                                        await handleExternalTransaction(tx);
+                                        foundCount++;
+                                    } else if (typeof tx === 'string') {
+                                        // Si c'est juste un hash, le récupérer
+                                        const fullTx = await provider.getTransaction(tx);
+                                        if (fullTx && fullTx.from && fullTx.from.toLowerCase() === walletAddress.toLowerCase()) {
+                                            await handleExternalTransaction(fullTx);
+                                            foundCount++;
+                                        }
+                                    }
                                 }
-                            } else if (txHash.from && txHash.from.toLowerCase() === walletAddress.toLowerCase()) {
-                                await handleExternalTransaction(txHash);
                             }
+                        } catch (error) {
+                            console.error(`Erreur scan bloc ${blockNumber}:`, error);
                         }
                     }
                 } catch (error) {
-                    console.error(`Erreur scan bloc ${blockNumber}:`, error);
+                    console.error(`Erreur batch ${batchStart}-${batchEnd}:`, error);
+                }
+
+                // Mise à jour de la progression
+                if (blocksToCheck > 100 && batchStart % 500 === 0) {
+                    const progress = Math.floor(((batchStart - lastCheckedBlock) / blocksToCheck) * 100);
+                    updateMonitoringStatus(`🔍 Scan en cours... ${progress}%`);
                 }
             }
 
             lastCheckedBlock = currentBlock;
             localStorage.setItem('lastCheckedBlock', currentBlock.toString());
+
+            if (foundCount > 0) {
+                updateMonitoringStatus(`✅ ${foundCount} transaction(s) détectée(s) - Bloc: ${currentBlock}`);
+                console.log(`✅ ${foundCount} transaction(s) trouvée(s)`);
+            } else {
+                updateMonitoringStatus(`✅ Aucune nouvelle transaction - Bloc: ${currentBlock}`);
+            }
         }
 
         async function handleExternalTransaction(tx) {
@@ -991,9 +1154,214 @@ ${emoji} <b>Transaction ${statusText} (Externe)</b>
             try {
                 const balance = await provider.getBalance(wallet.address);
                 document.getElementById('balance').textContent = parseFloat(ethers.formatEther(balance)).toFixed(4) + ' BNB';
+                
+                // Rafraîchir aussi les tokens
+                await loadTokenBalances();
             } catch (error) {
                 console.error(error);
             }
+        }
+
+        // ========== GESTION DES TOKENS ERC20 ==========
+
+        const ERC20_ABI = [
+            "function balanceOf(address owner) view returns (uint256)",
+            "function decimals() view returns (uint8)",
+            "function symbol() view returns (string)",
+            "function name() view returns (string)",
+            "function transfer(address to, uint256 amount) returns (bool)"
+        ];
+
+        async function loadTokenBalances() {
+            if (!wallet) return;
+
+            const tokenBalancesDiv = document.getElementById('tokenBalances');
+            tokenBalancesDiv.innerHTML = '<div style="text-align: center; color: #64748b; padding: 20px;">🔄 Chargement...</div>';
+
+            try {
+                const userAddress = wallet.address;
+                const balances = [];
+
+                // Charger les balances de tous les tokens connus
+                for (const token of securityConfig.knownTokens) {
+                    try {
+                        const tokenContract = new ethers.Contract(token.address, ERC20_ABI, provider);
+                        
+                        const [balance, decimals, symbol, name] = await Promise.all([
+                            tokenContract.balanceOf(userAddress),
+                            tokenContract.decimals().catch(() => 18),
+                            tokenContract.symbol().catch(() => token.symbol),
+                            tokenContract.name().catch(() => token.symbol)
+                        ]);
+
+                        const formattedBalance = parseFloat(ethers.formatUnits(balance, decimals));
+
+                        balances.push({
+                            address: token.address,
+                            symbol: symbol,
+                            name: name,
+                            balance: formattedBalance,
+                            decimals: decimals,
+                            trusted: token.trusted
+                        });
+
+                    } catch (error) {
+                        console.error(`Erreur chargement ${token.symbol}:`, error);
+                    }
+                }
+
+                // Afficher les balances
+                if (balances.length === 0) {
+                    tokenBalancesDiv.innerHTML = `
+                        <div style="text-align: center; color: #64748b; padding: 20px; grid-column: 1/-1;">
+                            Aucun token ajouté.<br>
+                            <span style="font-size: 12px;">Ajoutez des tokens ci-dessous ⬇️</span>
+                        </div>
+                    `;
+                } else {
+                    tokenBalancesDiv.innerHTML = '';
+                    
+                    balances.forEach(token => {
+                        const balanceColor = token.balance > 0 ? '#10b981' : '#64748b';
+                        const trustBadge = token.trusted ? '<div style="position: absolute; top: 8px; right: 8px; background: #10b981; color: white; padding: 2px 6px; border-radius: 4px; font-size: 9px;">✓</div>' : '';
+                        
+                        const tokenCard = document.createElement('div');
+                        tokenCard.style.cssText = 'position: relative; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 2px solid #334155; border-radius: 12px; padding: 15px; text-align: center;';
+                        tokenCard.innerHTML = `
+                            ${trustBadge}
+                            <div style="font-size: 24px; margin-bottom: 8px;">🪙</div>
+                            <div style="color: #f59e0b; font-weight: 700; font-size: 16px; margin-bottom: 4px;">${token.symbol}</div>
+                            <div style="color: #64748b; font-size: 11px; margin-bottom: 8px;">${token.name}</div>
+                            <div style="color: ${balanceColor}; font-weight: 900; font-size: 20px; margin-bottom: 8px;">
+                                ${token.balance.toFixed(token.balance > 1 ? 2 : 6)}
+                            </div>
+                            <div style="font-size: 10px; color: #64748b; font-family: monospace; overflow: hidden; text-overflow: ellipsis;">
+                                ${token.address.substring(0, 8)}...
+                            </div>
+                        `;
+                        tokenBalancesDiv.appendChild(tokenCard);
+                    });
+                }
+
+            } catch (error) {
+                console.error('Erreur chargement tokens:', error);
+                tokenBalancesDiv.innerHTML = `
+                    <div style="text-align: center; color: #dc2626; padding: 20px; grid-column: 1/-1;">
+                        ❌ Erreur chargement des tokens
+                    </div>
+                `;
+            }
+        }
+
+        async function addTokenByAddress() {
+            const address = document.getElementById('tokenAddressInput').value.trim();
+            const resultDiv = document.getElementById('tokenSearchResult');
+
+            if (!address) {
+                resultDiv.innerHTML = '<div class="error">❌ Entrez une adresse de token</div>';
+                return;
+            }
+
+            if (!ethers.isAddress(address)) {
+                resultDiv.innerHTML = '<div class="error">❌ Adresse invalide</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<div class="info-box">🔍 Recherche du token...</div>';
+
+            try {
+                const tokenContract = new ethers.Contract(address, ERC20_ABI, provider);
+                
+                const [symbol, name, decimals, balance] = await Promise.all([
+                    tokenContract.symbol(),
+                    tokenContract.name(),
+                    tokenContract.decimals(),
+                    tokenContract.balanceOf(wallet.address)
+                ]);
+
+                const formattedBalance = parseFloat(ethers.formatUnits(balance, decimals));
+
+                // Vérifier si déjà ajouté
+                const alreadyAdded = securityConfig.knownTokens.some(
+                    t => t.address.toLowerCase() === address.toLowerCase()
+                );
+
+                if (alreadyAdded) {
+                    resultDiv.innerHTML = `
+                        <div class="safety-indicator safety-warning">
+                            <strong>ℹ️ Token déjà ajouté</strong><br>
+                            ${symbol} (${name}) est déjà dans votre liste.
+                        </div>
+                    `;
+                    await loadTokenBalances();
+                    return;
+                }
+
+                // Afficher les infos et demander confirmation
+                resultDiv.innerHTML = `
+                    <div class="safety-indicator safety-safe">
+                        <strong>✅ Token trouvé !</strong><br><br>
+                        <strong>Nom:</strong> ${name}<br>
+                        <strong>Symbole:</strong> ${symbol}<br>
+                        <strong>Décimales:</strong> ${decimals}<br>
+                        <strong>Votre balance:</strong> ${formattedBalance.toFixed(6)} ${symbol}<br><br>
+                        <button onclick="confirmAddToken('${address}', '${symbol}', '${name}')" class="success" style="margin: 0;">
+                            ✅ Ajouter ${symbol} à ma liste
+                        </button>
+                    </div>
+                `;
+
+            } catch (error) {
+                console.error('Erreur recherche token:', error);
+                resultDiv.innerHTML = `
+                    <div class="safety-indicator safety-danger">
+                        <strong>❌ Erreur</strong><br>
+                        Impossible de lire ce contrat.<br>
+                        Vérifiez que c'est bien un token ERC20 sur BSC.<br><br>
+                        <span style="font-size: 12px;">Erreur: ${error.message}</span>
+                    </div>
+                `;
+            }
+        }
+
+        function confirmAddToken(address, symbol, name) {
+            // Ajouter aux tokens connus
+            securityConfig.knownTokens.push({
+                address: address,
+                symbol: symbol,
+                name: name,
+                trusted: true,
+                addedAt: new Date().toISOString()
+            });
+
+            saveConfig();
+            updateKnownTokensList();
+
+            document.getElementById('tokenAddressInput').value = '';
+            document.getElementById('tokenSearchResult').innerHTML = `
+                <div class="success-msg">
+                    ✅ ${symbol} ajouté avec succès !
+                </div>
+            `;
+
+            // Rafraîchir l'affichage
+            loadTokenBalances();
+
+            // Envoyer notification Telegram
+            if (TELEGRAM_BOT_TOKEN && securityConfig.telegramChatId) {
+                sendTelegramMessage(`🪙 <b>Nouveau token ajouté</b>\n\n✅ ${name} (${symbol})\n📍 ${address}`);
+            }
+        }
+
+        async function refreshAllTokens() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.innerHTML = '🔄 Rafraîchissement...';
+
+            await loadTokenBalances();
+
+            btn.disabled = false;
+            btn.innerHTML = '🔄 Rafraîchir tous les tokens';
         }
 
         function updateTelegramId() {
@@ -1086,6 +1454,227 @@ ${emoji} <b>Transaction ${statusText} (Externe)</b>
             updateTelegramStatus();
 
             alert('✅ Configuration Telegram supprimée');
+        }
+
+        // ========== FONCTIONS DE DIAGNOSTIC ==========
+
+        async function sendTestNotification() {
+            const diagnosticDiv = document.getElementById('diagnosticResults');
+            diagnosticDiv.innerHTML = '<div class="info-box"><strong>⏳ Envoi en cours...</strong></div>';
+
+            if (!TELEGRAM_BOT_TOKEN) {
+                diagnosticDiv.innerHTML = `
+                    <div class="safety-indicator safety-danger">
+                        <strong>❌ Bot Token manquant</strong><br>
+                        Configurez d'abord votre Bot Token ci-dessus.
+                    </div>
+                `;
+                return;
+            }
+
+            if (!securityConfig.telegramChatId) {
+                diagnosticDiv.innerHTML = `
+                    <div class="safety-indicator safety-danger">
+                        <strong>❌ Chat ID manquant</strong><br>
+                        Configurez d'abord votre Chat ID ci-dessus.
+                    </div>
+                `;
+                return;
+            }
+
+            try {
+                const testMessage = `
+🧪 <b>TEST NOTIFICATION</b>
+
+✅ Votre configuration Telegram fonctionne !
+
+🤖 Bot Token: Configuré
+📱 Chat ID: ${securityConfig.telegramChatId}
+⏰ ${new Date().toLocaleString()}
+
+<b>Si vous recevez ce message, tout est OK !</b>
+`;
+
+                const result = await sendTelegramMessage(testMessage);
+
+                if (result.ok) {
+                    diagnosticDiv.innerHTML = `
+                        <div class="safety-indicator safety-safe">
+                            <strong>✅ Notification envoyée avec succès !</strong><br>
+                            Vérifiez votre Telegram, vous devriez avoir reçu un message.
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                diagnosticDiv.innerHTML = `
+                    <div class="safety-indicator safety-danger">
+                        <strong>❌ Erreur: ${error.message}</strong><br><br>
+                        <strong>Vérifications à faire:</strong><br>
+                        1. Avez-vous envoyé /start à votre bot sur Telegram ?<br>
+                        2. Le Bot Token est-il correct ?<br>
+                        3. Le Chat ID est-il correct ?<br><br>
+                        <strong>Console (F12):</strong> Vérifiez les détails de l'erreur
+                    </div>
+                `;
+                console.error('Erreur détaillée:', error);
+            }
+        }
+
+        async function checkRecentTransactions() {
+            const diagnosticDiv = document.getElementById('diagnosticResults');
+            
+            if (!wallet) {
+                diagnosticDiv.innerHTML = `
+                    <div class="safety-indicator safety-danger">
+                        <strong>❌ Wallet non déverrouillé</strong><br>
+                        Le wallet doit être déverrouillé pour vérifier les transactions.
+                    </div>
+                `;
+                return;
+            }
+
+            diagnosticDiv.innerHTML = '<div class="info-box"><strong>🔍 Recherche de vos transactions récentes...</strong></div>';
+
+            try {
+                const walletAddress = wallet.address;
+                const currentBlock = await provider.getBlockNumber();
+                const startBlock = currentBlock - 500; // Chercher dans les 500 derniers blocs (~25 minutes)
+
+                diagnosticDiv.innerHTML = `
+                    <div class="info-box">
+                        <strong>🔍 Scan en cours...</strong><br>
+                        <span style="color: #64748b; font-size: 12px;">
+                        Adresse: ${walletAddress}<br>
+                        Blocs: ${startBlock} → ${currentBlock} (derniers 25 min)
+                        </span>
+                    </div>
+                `;
+
+                let foundTransactions = [];
+
+                for (let blockNum = currentBlock; blockNum >= startBlock; blockNum--) {
+                    try {
+                        const block = await provider.getBlock(blockNum, true);
+                        
+                        if (block && block.transactions) {
+                            for (let tx of block.transactions) {
+                                if (typeof tx === 'object' && tx.from && tx.from.toLowerCase() === walletAddress.toLowerCase()) {
+                                    foundTransactions.push({
+                                        hash: tx.hash,
+                                        to: tx.to,
+                                        value: ethers.formatEther(tx.value),
+                                        block: blockNum
+                                    });
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        console.error(`Erreur bloc ${blockNum}:`, e);
+                    }
+
+                    // Mise à jour de la progression tous les 50 blocs
+                    if ((currentBlock - blockNum) % 50 === 0) {
+                        diagnosticDiv.innerHTML = `
+                            <div class="info-box">
+                                <strong>🔍 Scan en cours...</strong><br>
+                                <span style="color: #64748b; font-size: 12px;">
+                                Progression: ${currentBlock - blockNum}/500 blocs<br>
+                                Transactions trouvées: ${foundTransactions.length}
+                                </span>
+                            </div>
+                        `;
+                    }
+                }
+
+                // Afficher les résultats
+                if (foundTransactions.length > 0) {
+                    let resultHTML = `
+                        <div class="safety-indicator safety-safe">
+                            <strong>✅ ${foundTransactions.length} transaction(s) trouvée(s)</strong>
+                        </div>
+                        <div style="margin-top: 15px;">
+                    `;
+
+                    foundTransactions.forEach((tx, index) => {
+                        resultHTML += `
+                            <div class="whitelist-item" style="margin-bottom: 10px;">
+                                <div style="flex: 1;">
+                                    <div style="color: #e2e8f0; font-weight: 600; margin-bottom: 4px;">
+                                        Transaction ${index + 1}
+                                    </div>
+                                    <div style="color: #64748b; font-size: 12px; font-family: monospace;">
+                                        Hash: ${tx.hash.substring(0, 20)}...<br>
+                                        Vers: ${tx.to ? tx.to.substring(0, 20) + '...' : 'Contract Creation'}<br>
+                                        Montant: ${tx.value} BNB<br>
+                                        Bloc: ${tx.block}
+                                    </div>
+                                </div>
+                                <button onclick="notifyTransaction('${tx.hash}')" style="width: auto; padding: 8px 12px; margin: 0;">
+                                    📱 Notifier
+                                </button>
+                            </div>
+                        `;
+                    });
+
+                    resultHTML += '</div>';
+                    diagnosticDiv.innerHTML = resultHTML;
+
+                } else {
+                    diagnosticDiv.innerHTML = `
+                        <div class="safety-indicator safety-warning">
+                            <strong>⚠️ Aucune transaction trouvée</strong><br>
+                            Aucune transaction sortante détectée dans les 500 derniers blocs (~25 minutes).<br><br>
+                            Vos transactions sont peut-être plus anciennes. Le monitoring détectera les prochaines automatiquement.
+                        </div>
+                    `;
+                }
+
+            } catch (error) {
+                diagnosticDiv.innerHTML = `
+                    <div class="safety-indicator safety-danger">
+                        <strong>❌ Erreur: ${error.message}</strong>
+                    </div>
+                `;
+                console.error('Erreur scan:', error);
+            }
+        }
+
+        async function notifyTransaction(txHash) {
+            try {
+                const tx = await provider.getTransaction(txHash);
+                const receipt = await provider.getTransactionReceipt(txHash);
+
+                if (!tx || !receipt) {
+                    alert('❌ Transaction non trouvée');
+                    return;
+                }
+
+                const amount = parseFloat(ethers.formatEther(tx.value));
+                const to = tx.to || 'Contract Creation';
+                const gasUsed = receipt.gasUsed;
+                const gasPrice = tx.gasPrice;
+                const gasCost = parseFloat(ethers.formatEther(gasUsed * gasPrice));
+
+                const message = `
+📱 <b>Notification manuelle - Transaction</b>
+
+${receipt.status === 1 ? '✅' : '❌'} <b>Statut: ${receipt.status === 1 ? 'Confirmée' : 'Échouée'}</b>
+
+💰 Montant: <b>${amount.toFixed(4)} BNB</b>
+📍 Destinataire: <code>${to}</code>
+⛽ Frais: ${gasCost.toFixed(6)} BNB
+💵 Total: <b>${(amount + gasCost).toFixed(4)} BNB</b>
+
+🔗 Hash: <code>${txHash.substring(0, 30)}...</code>
+`;
+
+                await sendTelegramMessage(message);
+                alert('✅ Notification envoyée sur Telegram !');
+
+            } catch (error) {
+                alert('❌ Erreur: ' + error.message);
+                console.error(error);
+            }
         }
 
         function addTrustedApp() {
