@@ -812,7 +812,8 @@
 
         function showMainScreen() {
             wallet = wallet.connect(provider);
-            document.getElementById('walletAddress').textContent = wallet.address;
+            const account = wallet.address;
+            document.getElementById('walletAddress').textContent = account;
             
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('createScreen').classList.add('hidden');
@@ -828,6 +829,160 @@
             if (securityConfig.protectionSettings.autoScanIncoming) {
                 console.log('🔍 Scanner automatique activé');
                 // En production, écouter les événements Transfer du wallet
+            }
+
+            // 🔥 NOUVEAU: Surveiller TOUTES les transactions (même externes)
+            startTransactionMonitoring(account);
+        }
+
+        // ========== SURVEILLANCE DES TRANSACTIONS EN TEMPS RÉEL ==========
+        
+        let monitoringInterval = null;
+        let lastCheckedBlock = null;
+
+        async function startTransactionMonitoring(walletAddress) {
+            console.log('🔍 Surveillance des transactions activée pour:', walletAddress);
+
+            // Obtenir le dernier bloc vérifié
+            const currentBlock = await provider.getBlockNumber();
+            lastCheckedBlock = localStorage.getItem('lastCheckedBlock') 
+                ? parseInt(localStorage.getItem('lastCheckedBlock')) 
+                : currentBlock - 100; // Scanner les 100 derniers blocs au démarrage
+
+            // Vérifier toutes les 15 secondes
+            monitoringInterval = setInterval(async () => {
+                try {
+                    await checkNewTransactions(walletAddress);
+                } catch (error) {
+                    console.error('Erreur monitoring:', error);
+                }
+            }, 15000); // 15 secondes
+
+            // Première vérification immédiate
+            await checkNewTransactions(walletAddress);
+        }
+
+        async function checkNewTransactions(walletAddress) {
+            const currentBlock = await provider.getBlockNumber();
+            
+            console.log(`🔍 Scan des blocs ${lastCheckedBlock} à ${currentBlock}`);
+
+            // Scanner les blocs depuis le dernier vérifié
+            for (let blockNumber = lastCheckedBlock + 1; blockNumber <= currentBlock; blockNumber++) {
+                try {
+                    const block = await provider.getBlock(blockNumber, true);
+                    
+                    if (block && block.transactions) {
+                        for (let txHash of block.transactions) {
+                            // Si c'est un hash (pas un objet transaction complet)
+                            if (typeof txHash === 'string') {
+                                const tx = await provider.getTransaction(txHash);
+                                if (tx && tx.from && tx.from.toLowerCase() === walletAddress.toLowerCase()) {
+                                    await handleExternalTransaction(tx);
+                                }
+                            } else if (txHash.from && txHash.from.toLowerCase() === walletAddress.toLowerCase()) {
+                                await handleExternalTransaction(txHash);
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error(`Erreur scan bloc ${blockNumber}:`, error);
+                }
+            }
+
+            lastCheckedBlock = currentBlock;
+            localStorage.setItem('lastCheckedBlock', currentBlock.toString());
+        }
+
+        async function handleExternalTransaction(tx) {
+            console.log('💸 Transaction externe détectée:', tx.hash);
+
+            // Vérifier si on a déjà traité cette transaction
+            const txId = tx.hash;
+            const processedTxs = JSON.parse(localStorage.getItem('processedExternalTxs') || '[]');
+            
+            if (processedTxs.includes(txId)) {
+                return; // Déjà traitée
+            }
+
+            // Marquer comme traitée
+            processedTxs.push(txId);
+            if (processedTxs.length > 100) {
+                processedTxs.shift(); // Garder seulement les 100 dernières
+            }
+            localStorage.setItem('processedExternalTxs', JSON.stringify(processedTxs));
+
+            // Obtenir les détails de la transaction
+            const receipt = await provider.getTransactionReceipt(txId);
+            
+            if (!receipt) {
+                return; // Transaction pas encore minée
+            }
+
+            const amount = parseFloat(ethers.formatEther(tx.value));
+            const to = tx.to || 'Contract Creation';
+            const gasUsed = receipt.gasUsed;
+            const gasPrice = tx.gasPrice;
+            const gasCost = parseFloat(ethers.formatEther(gasUsed * gasPrice));
+            const timestamp = new Date().toLocaleString();
+
+            // Ajouter au log
+            securityConfig.transactionLogs.unshift({
+                time: timestamp,
+                amount: amount,
+                to: to,
+                hash: txId,
+                status: receipt.status === 1 ? 'success' : 'failed',
+                external: true,
+                gasCost: gasCost
+            });
+
+            if (securityConfig.transactionLogs.length > 20) {
+                securityConfig.transactionLogs = securityConfig.transactionLogs.slice(0, 20);
+            }
+
+            saveConfig();
+            updateLogsDisplay();
+
+            // Envoyer notification Telegram
+            if (TELEGRAM_BOT_TOKEN && securityConfig.telegramChatId) {
+                const emoji = receipt.status === 1 ? '✅' : '❌';
+                const statusText = receipt.status === 1 ? 'Confirmée' : 'Échouée';
+                
+                const message = `
+${emoji} <b>Transaction ${statusText} (Externe)</b>
+
+⚠️ <b>Transaction effectuée en dehors du Secure Wallet</b>
+
+💰 Montant: <b>${amount.toFixed(4)} BNB</b>
+📍 Destinataire: <code>${to}</code>
+⛽ Frais de gas: ${gasCost.toFixed(6)} BNB
+💵 Total: <b>${(amount + gasCost).toFixed(4)} BNB</b>
+
+🔗 Hash: <code>${txId.substring(0, 20)}...</code>
+⏰ ${timestamp}
+
+💡 <b>Conseil:</b> Utilisez le Secure Wallet pour bénéficier de toutes les protections !
+`;
+
+                try {
+                    await sendTelegramMessage(message);
+                    console.log('📱 Notification Telegram envoyée');
+                } catch (error) {
+                    console.error('Erreur notification Telegram:', error);
+                }
+            }
+
+            // Mettre à jour le solde
+            refreshBalance();
+        }
+
+        // Arrêter la surveillance lors du logout
+        function stopTransactionMonitoring() {
+            if (monitoringInterval) {
+                clearInterval(monitoringInterval);
+                monitoringInterval = null;
+                console.log('🛑 Surveillance des transactions arrêtée');
             }
         }
 
@@ -1886,12 +2041,23 @@ Voulez-vous:
                 const entry = document.createElement('div');
                 entry.className = 'log-entry';
                 const statusColor = log.status === 'success' ? '#10b981' : '#dc2626';
-                const approvalBadge = log.autoApproved ? '<span style="background: #10b981; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 8px;">🤖 AUTO</span>' : '<span style="background: #0088cc; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 8px;">📱 TELEGRAM</span>';
+                
+                let approvalBadge = '';
+                if (log.external) {
+                    approvalBadge = '<span style="background: #f59e0b; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 8px;">⚠️ EXTERNE</span>';
+                } else if (log.autoApproved) {
+                    approvalBadge = '<span style="background: #10b981; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 8px;">🤖 AUTO</span>';
+                } else if (log.status === 'success') {
+                    approvalBadge = '<span style="background: #0088cc; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 8px;">📱 TELEGRAM</span>';
+                }
+                
+                const gasInfo = log.gasCost ? `<div style="font-size: 11px; color: #64748b;">Gas: ${log.gasCost.toFixed(6)} BNB</div>` : '';
                 
                 entry.innerHTML = `
                     <div style="font-size: 11px; color: #64748b; margin-bottom: 5px;">${log.time}</div>
-                    <div><strong style="color: ${statusColor}">${log.status === 'success' ? '✅' : '❌'} ${log.amount} BNB → ${log.to.substring(0, 10)}...</strong>${log.status === 'success' ? approvalBadge : ''}</div>
+                    <div><strong style="color: ${statusColor}">${log.status === 'success' ? '✅' : '❌'} ${log.amount} BNB → ${log.to.substring(0, 10)}...</strong>${approvalBadge}</div>
                     ${log.hash ? `<div style="font-size: 11px; color: #64748b;">Hash: ${log.hash.substring(0, 20)}...</div>` : ''}
+                    ${gasInfo}
                     ${log.error ? `<div style="font-size: 11px; color: #dc2626;">Erreur: ${log.error}</div>` : ''}
                 `;
                 div.appendChild(entry);
@@ -1900,6 +2066,7 @@ Voulez-vous:
 
         function logout() {
             wallet = null;
+            stopTransactionMonitoring();
             document.getElementById('mainScreen').classList.add('hidden');
             showLoginScreen();
         }
