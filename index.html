@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BSC Wallet</title>
+    <title>Secure Trading Wallet</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -14,14 +15,14 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             min-height: 100vh;
             padding: 20px;
             color: #333;
         }
 
         .container {
-            max-width: 600px;
+            max-width: 800px;
             margin: 0 auto;
             background: white;
             border-radius: 20px;
@@ -31,7 +32,7 @@
 
         h1 {
             text-align: center;
-            color: #667eea;
+            color: #1e3c72;
             margin-bottom: 10px;
             font-size: 28px;
         }
@@ -53,13 +54,13 @@
         .section h2 {
             font-size: 18px;
             margin-bottom: 15px;
-            color: #667eea;
+            color: #1e3c72;
         }
 
         button {
             width: 100%;
             padding: 14px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             color: white;
             border: none;
             border-radius: 8px;
@@ -72,19 +73,66 @@
 
         button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 5px 15px rgba(30, 60, 114, 0.4);
         }
 
-        button:active {
-            transform: translateY(0);
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        button.danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+
+        button.success {
+            background: linear-gradient(135deg, #28a745 0%, #218838 100%);
         }
 
         button.secondary {
             background: #6c757d;
         }
 
-        button.secondary:hover {
-            box-shadow: 0 5px 15px rgba(108, 117, 125, 0.4);
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #1e3c72;
+        }
+
+        .warning {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: #856404;
+        }
+
+        .error {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            color: #721c24;
+        }
+
+        .success-msg {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            color: #155724;
         }
 
         .info-box {
@@ -99,330 +147,621 @@
 
         .info-box label {
             font-weight: 600;
-            color: #667eea;
+            color: #1e3c72;
             display: block;
             margin-bottom: 8px;
-        }
-
-        .warning {
-            background: #fff3cd;
-            border: 2px solid #ffc107;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 13px;
-            color: #856404;
-        }
-
-        .warning strong {
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        input {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            font-size: 14px;
-            margin-bottom: 10px;
-            transition: border-color 0.3s;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .balance {
-            font-size: 32px;
-            font-weight: bold;
-            color: #667eea;
-            text-align: center;
-            margin: 20px 0;
         }
 
         .hidden {
             display: none;
         }
 
-        .copy-btn {
-            background: #28a745;
-            padding: 8px 16px;
-            font-size: 12px;
-            margin-top: 10px;
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
         }
 
-        .copy-btn:hover {
-            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
-        }
-
-        .tab-buttons {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .tab-buttons button {
-            flex: 1;
-        }
-
-        .success {
-            background: #d4edda;
-            border: 2px solid #28a745;
+        .stat-box {
+            background: white;
             padding: 15px;
             border-radius: 8px;
-            margin-top: 15px;
+            border: 2px solid #e9ecef;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1e3c72;
+        }
+
+        .balance {
+            font-size: 32px;
+            font-weight: bold;
+            color: #1e3c72;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .log-entry {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 4px solid #1e3c72;
+            font-size: 13px;
+        }
+
+        .log-time {
+            color: #666;
+            font-size: 11px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .status-active {
+            background: #d4edda;
             color: #155724;
         }
 
-        .error {
+        .status-stopped {
             background: #f8d7da;
-            border: 2px solid #dc3545;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 15px;
             color: #721c24;
+        }
+
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 10px;
+            background: white;
+        }
+
+        .whitelist-item {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 2px solid #e9ecef;
+        }
+
+        .whitelist-item button {
+            width: auto;
+            padding: 6px 12px;
+            font-size: 12px;
+            margin: 0;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🔐 BSC Wallet</h1>
-        <p class="subtitle">Binance Smart Chain Wallet</p>
+        <h1>🔐 Secure Trading Wallet</h1>
+        <p class="subtitle">Bot de Trading Sécurisé sur BSC</p>
 
         <div class="warning">
-            <strong>⚠️ AVERTISSEMENT DE SÉCURITÉ</strong>
-            Ne partagez JAMAIS votre phrase de récupération ou clé privée avec qui que ce soit. Conservez-les en lieu sûr hors ligne.
+            <strong>⚠️ SÉCURITÉ</strong>
+            Ce wallet utilise un chiffrement AES-256. Définissez un mot de passe FORT. Ne l'utilisez QUE pour le trading avec des montants limités. Pour le stockage principal, utilisez MetaMask ou Ledger.
         </div>
 
-        <!-- Écran d'accueil -->
-        <div id="welcomeScreen">
+        <!-- Écran de connexion/création -->
+        <div id="loginScreen">
             <div class="section">
-                <h2>Bienvenue</h2>
-                <button onclick="createWallet()">Créer un nouveau wallet</button>
-                <button onclick="showImportScreen()" class="secondary">Importer un wallet existant</button>
+                <h2>Connexion</h2>
+                <input type="password" id="loginPassword" placeholder="Entrez votre mot de passe">
+                <button onclick="login()">Déverrouiller le wallet</button>
+                <button onclick="showCreateScreen()" class="secondary">Créer un nouveau wallet</button>
             </div>
         </div>
 
         <!-- Écran de création -->
         <div id="createScreen" class="hidden">
             <div class="section">
-                <h2>Votre nouveau wallet</h2>
-                <div class="info-box">
-                    <label>Adresse publique :</label>
-                    <div id="newAddress"></div>
-                    <button class="copy-btn" onclick="copyToClipboard('newAddress')">📋 Copier</button>
+                <h2>Créer un wallet sécurisé</h2>
+                <input type="password" id="newPassword" placeholder="Mot de passe (min 8 caractères)">
+                <input type="password" id="confirmPassword" placeholder="Confirmer le mot de passe">
+                <input type="text" id="importPhrase" placeholder="(Optionnel) Phrase de récupération existante">
+                <button onclick="createSecureWallet()">Créer le wallet</button>
+                <button onclick="showLoginScreen()" class="secondary">Retour</button>
+                <div id="createMessage"></div>
+                
+                <div id="newWalletInfo" class="hidden">
+                    <div class="info-box">
+                        <label>⚠️ SAUVEGARDEZ CETTE PHRASE (12 mots) :</label>
+                        <div id="displayMnemonic" style="font-weight: bold; color: #dc3545;"></div>
+                    </div>
+                    <button onclick="confirmAndContinue()" class="success">J'ai sauvegardé ma phrase</button>
                 </div>
-                <div class="info-box">
-                    <label>Phrase de récupération (12 mots) :</label>
-                    <div id="newMnemonic"></div>
-                    <button class="copy-btn" onclick="copyToClipboard('newMnemonic')">📋 Copier</button>
-                </div>
-                <div class="info-box">
-                    <label>Clé privée :</label>
-                    <div id="newPrivateKey"></div>
-                    <button class="copy-btn" onclick="copyToClipboard('newPrivateKey')">📋 Copier</button>
-                </div>
-                <button onclick="saveAndContinue()">Sauvegarder et continuer</button>
             </div>
         </div>
 
-        <!-- Écran d'import -->
-        <div id="importScreen" class="hidden">
+        <!-- Écran principal -->
+        <div id="mainScreen" class="hidden">
+            <!-- En-tête avec statut -->
             <div class="section">
-                <h2>Importer un wallet</h2>
-                <input type="text" id="importMnemonic" placeholder="Entrez votre phrase de récupération (12 mots)">
-                <button onclick="importWallet()">Importer</button>
-                <button onclick="showWelcomeScreen()" class="secondary">Retour</button>
-                <div id="importMessage"></div>
-            </div>
-        </div>
-
-        <!-- Écran principal du wallet -->
-        <div id="walletScreen" class="hidden">
-            <div class="section">
-                <h2>Mon Wallet</h2>
+                <h2>
+                    Dashboard
+                    <span id="botStatus" class="status-badge status-active">Bot Actif</span>
+                </h2>
                 <div class="info-box">
-                    <label>Adresse :</label>
+                    <label>Adresse du wallet :</label>
                     <div id="walletAddress"></div>
-                    <button class="copy-btn" onclick="copyToClipboard('walletAddress')">📋 Copier</button>
                 </div>
                 <div class="balance" id="balance">0.0000 BNB</div>
-                <button onclick="refreshBalance()">🔄 Actualiser le solde</button>
+                <button onclick="refreshBalance()">🔄 Actualiser</button>
             </div>
 
-            <div class="tab-buttons">
-                <button onclick="showSendTab()">Envoyer</button>
-                <button onclick="showReceiveTab()">Recevoir</button>
-            </div>
-
-            <!-- Onglet Envoyer -->
-            <div id="sendTab" class="section">
-                <h2>Envoyer BNB</h2>
-                <input type="text" id="recipientAddress" placeholder="Adresse du destinataire">
-                <input type="text" id="amount" placeholder="Montant en BNB">
-                <button onclick="sendTransaction()">Envoyer</button>
-                <div id="sendMessage"></div>
-            </div>
-
-            <!-- Onglet Recevoir -->
-            <div id="receiveTab" class="section hidden">
-                <h2>Recevoir BNB</h2>
-                <p>Partagez cette adresse pour recevoir des BNB :</p>
-                <div class="info-box">
-                    <div id="receiveAddress"></div>
-                    <button class="copy-btn" onclick="copyToClipboard('receiveAddress')">📋 Copier l'adresse</button>
+            <!-- Statistiques -->
+            <div class="section">
+                <h2>Limites & Statistiques</h2>
+                <div class="stats">
+                    <div class="stat-box">
+                        <div class="stat-label">Max par transaction</div>
+                        <div class="stat-value" id="maxPerTx">1.0 BNB</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Limite quotidienne</div>
+                        <div class="stat-value" id="dailyLimit">10.0 BNB</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Dépensé aujourd'hui</div>
+                        <div class="stat-value" id="dailySpent">0.0 BNB</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Restant aujourd'hui</div>
+                        <div class="stat-value" id="dailyRemaining">10.0 BNB</div>
+                    </div>
                 </div>
             </div>
 
-            <button onclick="logout()" class="secondary">Déconnexion</button>
+            <!-- Configuration des limites -->
+            <div class="section">
+                <h2>⚙️ Configuration des limites</h2>
+                <input type="number" id="newMaxTx" placeholder="Max par transaction (BNB)" step="0.1">
+                <input type="number" id="newDailyLimit" placeholder="Limite quotidienne (BNB)" step="0.1">
+                <button onclick="updateLimits()">Mettre à jour les limites</button>
+            </div>
+
+            <!-- Liste blanche -->
+            <div class="section">
+                <h2>🛡️ Liste blanche (Adresses autorisées)</h2>
+                <div id="whitelistDisplay"></div>
+                <input type="text" id="newWhitelistAddress" placeholder="0x... Adresse à autoriser">
+                <button onclick="addToWhitelist()">Ajouter à la liste blanche</button>
+            </div>
+
+            <!-- Trading -->
+            <div class="section">
+                <h2>💱 Envoyer / Trader</h2>
+                <select id="tokenSelect">
+                    <option value="BNB">BNB (Natif)</option>
+                </select>
+                <input type="text" id="recipientAddress" placeholder="Adresse destinataire">
+                <input type="number" id="sendAmount" placeholder="Montant" step="0.0001">
+                <button onclick="executeTrade()" id="tradeBtn">Envoyer</button>
+                <div id="tradeMessage"></div>
+            </div>
+
+            <!-- Logs des transactions -->
+            <div class="section">
+                <h2>📋 Historique des transactions</h2>
+                <div id="transactionLogs"></div>
+            </div>
+
+            <!-- Contrôles d'urgence -->
+            <div class="section">
+                <h2>🚨 Contrôles d'urgence</h2>
+                <button onclick="toggleEmergencyStop()" class="danger" id="emergencyBtn">ARRÊT D'URGENCE</button>
+                <button onclick="logout()" class="secondary">Verrouiller le wallet</button>
+            </div>
         </div>
     </div>
 
     <script>
         const BSC_RPC = "https://bsc-dataseed.binance.org/";
+        let provider = new ethers.JsonRpcProvider(BSC_RPC);
         let wallet = null;
-        let provider = null;
+        let encryptedWallet = null;
 
-        // Initialiser le provider BSC
-        provider = new ethers.JsonRpcProvider(BSC_RPC);
+        // Configuration de sécurité
+        let securityConfig = {
+            maxPerTransaction: 1.0, // BNB
+            dailyLimit: 10.0, // BNB
+            dailySpent: 0.0,
+            lastResetDate: new Date().toDateString(),
+            whitelist: [
+                "0x10ED43C718714eb63d5aA57B78B54704E256024E", // PancakeSwap Router
+            ],
+            emergencyStop: false,
+            transactionLogs: []
+        };
 
-        // Créer un nouveau wallet
-        function createWallet() {
-            wallet = ethers.Wallet.createRandom();
-            
-            document.getElementById('newAddress').textContent = wallet.address;
-            document.getElementById('newMnemonic').textContent = wallet.mnemonic.phrase;
-            document.getElementById('newPrivateKey').textContent = wallet.privateKey;
-            
-            document.getElementById('welcomeScreen').classList.add('hidden');
-            document.getElementById('createScreen').classList.remove('hidden');
-        }
-
-        // Sauvegarder et continuer
-        function saveAndContinue() {
-            if (wallet) {
-                showWalletScreen();
+        // Charger la config depuis le stockage
+        function loadConfig() {
+            const saved = localStorage.getItem('securityConfig');
+            if (saved) {
+                const loaded = JSON.parse(saved);
+                securityConfig = { ...securityConfig, ...loaded };
+                checkDailyReset();
+                updateStatsDisplay();
+                updateWhitelistDisplay();
+                updateLogsDisplay();
+                updateBotStatus();
             }
         }
 
-        // Afficher l'écran d'import
-        function showImportScreen() {
-            document.getElementById('welcomeScreen').classList.add('hidden');
-            document.getElementById('importScreen').classList.remove('hidden');
+        // Sauvegarder la config
+        function saveConfig() {
+            localStorage.setItem('securityConfig', JSON.stringify(securityConfig));
         }
 
-        // Importer un wallet
-        function importWallet() {
-            const mnemonic = document.getElementById('importMnemonic').value.trim();
-            const messageDiv = document.getElementById('importMessage');
+        // Vérifier et reset quotidien
+        function checkDailyReset() {
+            const today = new Date().toDateString();
+            if (securityConfig.lastResetDate !== today) {
+                securityConfig.dailySpent = 0;
+                securityConfig.lastResetDate = today;
+                saveConfig();
+            }
+        }
+
+        // Chiffrer et sauvegarder le wallet
+        function encryptAndSave(wallet, password) {
+            const data = JSON.stringify({
+                mnemonic: wallet.mnemonic.phrase,
+                address: wallet.address
+            });
+            const encrypted = CryptoJS.AES.encrypt(data, password).toString();
+            localStorage.setItem('encryptedWallet', encrypted);
+            return encrypted;
+        }
+
+        // Déchiffrer le wallet
+        function decryptWallet(password) {
+            const encrypted = localStorage.getItem('encryptedWallet');
+            if (!encrypted) return null;
             
             try {
-                wallet = ethers.Wallet.fromPhrase(mnemonic);
-                messageDiv.innerHTML = '<div class="success">Wallet importé avec succès !</div>';
-                setTimeout(() => {
-                    showWalletScreen();
-                }, 1500);
+                const decrypted = CryptoJS.AES.decrypt(encrypted, password).toString(CryptoJS.enc.Utf8);
+                const data = JSON.parse(decrypted);
+                return ethers.Wallet.fromPhrase(data.mnemonic);
             } catch (error) {
-                messageDiv.innerHTML = '<div class="error">Phrase de récupération invalide. Vérifiez et réessayez.</div>';
+                return null;
             }
         }
 
-        // Afficher l'écran du wallet
-        function showWalletScreen() {
+        // Créer un wallet sécurisé
+        function createSecureWallet() {
+            const password = document.getElementById('newPassword').value;
+            const confirm = document.getElementById('confirmPassword').value;
+            const importPhrase = document.getElementById('importPhrase').value.trim();
+            const messageDiv = document.getElementById('createMessage');
+
+            if (password.length < 8) {
+                messageDiv.innerHTML = '<div class="error">Le mot de passe doit contenir au moins 8 caractères.</div>';
+                return;
+            }
+
+            if (password !== confirm) {
+                messageDiv.innerHTML = '<div class="error">Les mots de passe ne correspondent pas.</div>';
+                return;
+            }
+
+            try {
+                // Créer ou importer le wallet
+                if (importPhrase) {
+                    wallet = ethers.Wallet.fromPhrase(importPhrase);
+                } else {
+                    wallet = ethers.Wallet.createRandom();
+                }
+
+                // Chiffrer et sauvegarder
+                encryptAndSave(wallet, password);
+
+                // Afficher la phrase de récupération
+                document.getElementById('displayMnemonic').textContent = wallet.mnemonic.phrase;
+                document.getElementById('newWalletInfo').classList.remove('hidden');
+                messageDiv.innerHTML = '<div class="success-msg">✅ Wallet créé et chiffré avec succès !</div>';
+
+            } catch (error) {
+                messageDiv.innerHTML = '<div class="error">Erreur : ' + error.message + '</div>';
+            }
+        }
+
+        // Confirmer et continuer
+        function confirmAndContinue() {
+            showMainScreen();
+        }
+
+        // Connexion
+        function login() {
+            const password = document.getElementById('loginPassword').value;
+            wallet = decryptWallet(password);
+
+            if (wallet) {
+                showMainScreen();
+            } else {
+                alert('❌ Mot de passe incorrect ou wallet non trouvé.');
+            }
+        }
+
+        // Afficher l'écran principal
+        function showMainScreen() {
             wallet = wallet.connect(provider);
-            
             document.getElementById('walletAddress').textContent = wallet.address;
-            document.getElementById('receiveAddress').textContent = wallet.address;
             
-            document.getElementById('welcomeScreen').classList.add('hidden');
+            document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('createScreen').classList.add('hidden');
-            document.getElementById('importScreen').classList.add('hidden');
-            document.getElementById('walletScreen').classList.remove('hidden');
-            
+            document.getElementById('mainScreen').classList.remove('hidden');
+
+            loadConfig();
             refreshBalance();
         }
 
         // Actualiser le solde
         async function refreshBalance() {
             if (!wallet) return;
-            
             try {
                 const balance = await provider.getBalance(wallet.address);
-                const balanceInBNB = ethers.formatEther(balance);
-                document.getElementById('balance').textContent = parseFloat(balanceInBNB).toFixed(4) + ' BNB';
+                document.getElementById('balance').textContent = parseFloat(ethers.formatEther(balance)).toFixed(4) + ' BNB';
             } catch (error) {
-                console.error('Erreur lors de la récupération du solde:', error);
-                document.getElementById('balance').textContent = 'Erreur';
+                console.error('Erreur:', error);
             }
         }
 
-        // Envoyer une transaction
-        async function sendTransaction() {
+        // Mettre à jour l'affichage des stats
+        function updateStatsDisplay() {
+            document.getElementById('maxPerTx').textContent = securityConfig.maxPerTransaction + ' BNB';
+            document.getElementById('dailyLimit').textContent = securityConfig.dailyLimit + ' BNB';
+            document.getElementById('dailySpent').textContent = securityConfig.dailySpent.toFixed(4) + ' BNB';
+            document.getElementById('dailyRemaining').textContent = (securityConfig.dailyLimit - securityConfig.dailySpent).toFixed(4) + ' BNB';
+        }
+
+        // Mettre à jour les limites
+        function updateLimits() {
+            const newMaxTx = parseFloat(document.getElementById('newMaxTx').value);
+            const newDaily = parseFloat(document.getElementById('newDailyLimit').value);
+
+            if (newMaxTx > 0) securityConfig.maxPerTransaction = newMaxTx;
+            if (newDaily > 0) securityConfig.dailyLimit = newDaily;
+
+            saveConfig();
+            updateStatsDisplay();
+            alert('✅ Limites mises à jour !');
+        }
+
+        // Vérifier les limites avant transaction
+        function checkLimits(amount) {
+            checkDailyReset();
+
+            if (amount > securityConfig.maxPerTransaction) {
+                throw new Error(`Montant supérieur à la limite par transaction (${securityConfig.maxPerTransaction} BNB)`);
+            }
+
+            if (securityConfig.dailySpent + amount > securityConfig.dailyLimit) {
+                throw new Error(`Limite quotidienne dépassée. Restant: ${(securityConfig.dailyLimit - securityConfig.dailySpent).toFixed(4)} BNB`);
+            }
+
+            return true;
+        }
+
+        // Vérifier la liste blanche
+        function isWhitelisted(address) {
+            return securityConfig.whitelist.some(addr => addr.toLowerCase() === address.toLowerCase());
+        }
+
+        // Ajouter à la liste blanche
+        function addToWhitelist() {
+            const address = document.getElementById('newWhitelistAddress').value.trim();
+            if (address && ethers.isAddress(address)) {
+                if (!isWhitelisted(address)) {
+                    securityConfig.whitelist.push(address);
+                    saveConfig();
+                    updateWhitelistDisplay();
+                    document.getElementById('newWhitelistAddress').value = '';
+                    alert('✅ Adresse ajoutée à la liste blanche !');
+                } else {
+                    alert('ℹ️ Cette adresse est déjà dans la liste blanche.');
+                }
+            } else {
+                alert('❌ Adresse invalide.');
+            }
+        }
+
+        // Retirer de la liste blanche
+        function removeFromWhitelist(address) {
+            securityConfig.whitelist = securityConfig.whitelist.filter(addr => addr !== address);
+            saveConfig();
+            updateWhitelistDisplay();
+        }
+
+        // Afficher la liste blanche
+        function updateWhitelistDisplay() {
+            const div = document.getElementById('whitelistDisplay');
+            div.innerHTML = '';
+            securityConfig.whitelist.forEach(address => {
+                const item = document.createElement('div');
+                item.className = 'whitelist-item';
+                item.innerHTML = `
+                    <span>${address}</span>
+                    <button onclick="removeFromWhitelist('${address}')" class="danger">Retirer</button>
+                `;
+                div.appendChild(item);
+            });
+        }
+
+        // Exécuter un trade
+        async function executeTrade() {
+            if (securityConfig.emergencyStop) {
+                alert('🚨 ARRÊT D\'URGENCE ACTIF ! Trading désactivé.');
+                return;
+            }
+
             const recipient = document.getElementById('recipientAddress').value.trim();
-            const amount = document.getElementById('amount').value.trim();
-            const messageDiv = document.getElementById('sendMessage');
-            
+            const amount = parseFloat(document.getElementById('sendAmount').value);
+            const messageDiv = document.getElementById('tradeMessage');
+
             if (!recipient || !amount) {
                 messageDiv.innerHTML = '<div class="error">Veuillez remplir tous les champs.</div>';
                 return;
             }
-            
+
+            if (!isWhitelisted(recipient)) {
+                messageDiv.innerHTML = '<div class="error">❌ Adresse non autorisée (pas dans la liste blanche).</div>';
+                return;
+            }
+
             try {
+                checkLimits(amount);
+
                 const tx = await wallet.sendTransaction({
                     to: recipient,
-                    value: ethers.parseEther(amount)
+                    value: ethers.parseEther(amount.toString())
+                });
+
+                messageDiv.innerHTML = '<div class="success-msg">⏳ Transaction envoyée ! Hash: ' + tx.hash.substring(0, 20) + '...</div>';
+
+                await tx.wait();
+
+                // Mettre à jour les stats
+                securityConfig.dailySpent += amount;
+                securityConfig.transactionLogs.unshift({
+                    time: new Date().toLocaleString(),
+                    amount: amount,
+                    to: recipient,
+                    hash: tx.hash,
+                    status: 'success'
                 });
                 
-                messageDiv.innerHTML = '<div class="success">Transaction envoyée ! Hash: ' + tx.hash + '</div>';
-                
-                await tx.wait();
-                messageDiv.innerHTML = '<div class="success">Transaction confirmée !</div>';
+                if (securityConfig.transactionLogs.length > 20) {
+                    securityConfig.transactionLogs = securityConfig.transactionLogs.slice(0, 20);
+                }
+
+                saveConfig();
+                updateStatsDisplay();
+                updateLogsDisplay();
                 refreshBalance();
-                
+
+                messageDiv.innerHTML = '<div class="success-msg">✅ Transaction confirmée !</div>';
                 document.getElementById('recipientAddress').value = '';
-                document.getElementById('amount').value = '';
+                document.getElementById('sendAmount').value = '';
+
             } catch (error) {
-                messageDiv.innerHTML = '<div class="error">Erreur: ' + error.message + '</div>';
+                messageDiv.innerHTML = '<div class="error">❌ ' + error.message + '</div>';
+                
+                securityConfig.transactionLogs.unshift({
+                    time: new Date().toLocaleString(),
+                    amount: amount,
+                    to: recipient,
+                    status: 'failed',
+                    error: error.message
+                });
+                saveConfig();
+                updateLogsDisplay();
             }
         }
 
-        // Afficher l'onglet d'envoi
-        function showSendTab() {
-            document.getElementById('sendTab').classList.remove('hidden');
-            document.getElementById('receiveTab').classList.add('hidden');
-        }
+        // Afficher les logs
+        function updateLogsDisplay() {
+            const div = document.getElementById('transactionLogs');
+            div.innerHTML = '';
+            
+            if (securityConfig.transactionLogs.length === 0) {
+                div.innerHTML = '<p style="text-align: center; color: #999;">Aucune transaction</p>';
+                return;
+            }
 
-        // Afficher l'onglet de réception
-        function showReceiveTab() {
-            document.getElementById('sendTab').classList.add('hidden');
-            document.getElementById('receiveTab').classList.remove('hidden');
-        }
-
-        // Copier dans le presse-papier
-        function copyToClipboard(elementId) {
-            const text = document.getElementById(elementId).textContent;
-            navigator.clipboard.writeText(text).then(() => {
-                alert('Copié dans le presse-papier !');
+            securityConfig.transactionLogs.forEach(log => {
+                const entry = document.createElement('div');
+                entry.className = 'log-entry';
+                const statusColor = log.status === 'success' ? '#28a745' : '#dc3545';
+                entry.innerHTML = `
+                    <div class="log-time">${log.time}</div>
+                    <div><strong style="color: ${statusColor}">${log.status === 'success' ? '✅' : '❌'} ${log.amount} BNB → ${log.to.substring(0, 10)}...</strong></div>
+                    ${log.hash ? `<div style="font-size: 11px; color: #666;">Hash: ${log.hash.substring(0, 20)}...</div>` : ''}
+                    ${log.error ? `<div style="font-size: 11px; color: #dc3545;">Erreur: ${log.error}</div>` : ''}
+                `;
+                div.appendChild(entry);
             });
+        }
+
+        // Arrêt d'urgence
+        function toggleEmergencyStop() {
+            securityConfig.emergencyStop = !securityConfig.emergencyStop;
+            saveConfig();
+            updateBotStatus();
+            
+            if (securityConfig.emergencyStop) {
+                alert('🚨 ARRÊT D\'URGENCE ACTIVÉ ! Toutes les transactions sont bloquées.');
+            } else {
+                alert('✅ Bot réactivé. Les transactions sont à nouveau autorisées.');
+            }
+        }
+
+        // Mettre à jour le statut du bot
+        function updateBotStatus() {
+            const badge = document.getElementById('botStatus');
+            const btn = document.getElementById('emergencyBtn');
+            const tradeBtn = document.getElementById('tradeBtn');
+            
+            if (securityConfig.emergencyStop) {
+                badge.textContent = 'Bot Arrêté';
+                badge.className = 'status-badge status-stopped';
+                btn.textContent = 'RÉACTIVER LE BOT';
+                tradeBtn.disabled = true;
+            } else {
+                badge.textContent = 'Bot Actif';
+                badge.className = 'status-badge status-active';
+                btn.textContent = 'ARRÊT D\'URGENCE';
+                tradeBtn.disabled = false;
+            }
         }
 
         // Déconnexion
         function logout() {
             wallet = null;
-            document.getElementById('walletScreen').classList.add('hidden');
-            showWelcomeScreen();
+            document.getElementById('mainScreen').classList.add('hidden');
+            showLoginScreen();
         }
 
-        // Retour à l'écran d'accueil
-        function showWelcomeScreen() {
-            document.getElementById('welcomeScreen').classList.remove('hidden');
+        // Afficher l'écran de connexion
+        function showLoginScreen() {
+            document.getElementById('loginScreen').classList.remove('hidden');
             document.getElementById('createScreen').classList.add('hidden');
-            document.getElementById('importScreen').classList.add('hidden');
-            document.getElementById('walletScreen').classList.add('hidden');
-            document.getElementById('importMnemonic').value = '';
+            document.getElementById('loginPassword').value = '';
         }
+
+        // Afficher l'écran de création
+        function showCreateScreen() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('createScreen').classList.remove('hidden');
+        }
+
+        // Vérifier si un wallet existe au démarrage
+        window.onload = function() {
+            const hasWallet = localStorage.getItem('encryptedWallet');
+            if (!hasWallet) {
+                showCreateScreen();
+            }
+        };
     </script>
 </body>
 </html>
