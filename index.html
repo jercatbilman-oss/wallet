@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -569,6 +570,38 @@
                 </div>
 
                 <div class="section">
+                    <h2>📤 Envoyer des Tokens</h2>
+                    
+                    <label style="font-size: 12px; color: #94a3b8; margin-bottom: 8px; display: block; font-weight: 600;">
+                        Sélectionner le token
+                    </label>
+                    <select id="sendTokenSelect" onchange="updateSendTokenBalance()" style="margin-bottom: 15px;">
+                        <option value="BNB">BNB</option>
+                    </select>
+                    
+                    <div id="sendTokenBalance" style="background: #0f172a; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 2px solid #334155;">
+                        <span style="font-size: 12px; color: #64748b;">Balance disponible:</span>
+                        <div style="font-size: 18px; color: #f59e0b; font-weight: 700; margin-top: 4px;" id="sendBalanceAmount">0.0</div>
+                    </div>
+                    
+                    <input type="text" id="sendToAddress" placeholder="Adresse du destinataire (0x...)">
+                    
+                    <input type="number" id="sendAmount" placeholder="Montant à envoyer" step="0.000001" min="0">
+                    
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <button onclick="setSendAmount(0.25)" class="secondary" style="flex: 1; padding: 8px; font-size: 12px;">25%</button>
+                        <button onclick="setSendAmount(0.5)" class="secondary" style="flex: 1; padding: 8px; font-size: 12px;">50%</button>
+                        <button onclick="setSendAmount(0.75)" class="secondary" style="flex: 1; padding: 8px; font-size: 12px;">75%</button>
+                        <button onclick="setSendAmount(1)" class="secondary" style="flex: 1; padding: 8px; font-size: 12px;">MAX</button>
+                    </div>
+                    
+                    <button onclick="sendToken()" class="success" id="sendTokenBtn">
+                        📤 Envoyer
+                    </button>
+                    <div id="sendTokenMessage"></div>
+                </div>
+
+                <div class="section">
                     <h2>➕ Ajouter un Token</h2>
                     <input type="text" id="tokenAddressInput" placeholder="Adresse du contrat (0x...)">
                     <button onclick="addTokenByAddress()">🔍 Rechercher et ajouter</button>
@@ -665,7 +698,8 @@
             "function symbol() view returns (string)",
             "function name() view returns (string)",
             "function approve(address spender, uint256 amount) external returns (bool)",
-            "function allowance(address owner, address spender) external view returns (uint256)"
+            "function allowance(address owner, address spender) external view returns (uint256)",
+            "function transfer(address to, uint256 amount) external returns (bool)"
         ];
 
         let swapConfig = {
@@ -704,6 +738,8 @@
             if (pageName === 'swap') {
                 populateSwapTokens();
                 updateSwapBalances();
+            } else if (pageName === 'tokens') {
+                populateSendTokenSelect();
             }
         }
 
@@ -808,6 +844,7 @@
             refreshBalance();
             updateBotTokenStatus();
             updateTelegramStatus();
+            populateSendTokenSelect();
         }
 
         function logout() {
@@ -833,354 +870,6 @@
             try {
                 const balance = await provider.getBalance(wallet.address);
                 document.getElementById('balance').textContent = parseFloat(ethers.formatEther(balance)).toFixed(4) + ' BNB';
-                await loadTokenBalances();
-            } catch (error) {
-                console.error(error);
-            }
-        }
-
-        async function loadTokenBalances() {
-            if (!wallet) return;
-
-            const tokenBalancesDiv = document.getElementById('tokenBalances');
-            tokenBalancesDiv.innerHTML = '<div style="text-align: center; color: #64748b; padding: 20px;">🔄 Chargement...</div>';
-
-            try {
-                const userAddress = wallet.address;
-                const balances = [];
-
-                for (const token of securityConfig.knownTokens) {
-                    try {
-                        const tokenContract = new ethers.Contract(token.address, ERC20_ABI, provider);
-                        
-                        const [balance, decimals, symbol] = await Promise.all([
-                            tokenContract.balanceOf(userAddress),
-                            tokenContract.decimals().catch(() => 18),
-                            tokenContract.symbol().catch(() => token.symbol)
-                        ]);
-
-                        const formattedBalance = parseFloat(ethers.formatUnits(balance, decimals));
-
-                        balances.push({
-                            symbol: symbol,
-                            balance: formattedBalance,
-                            trusted: token.trusted
-                        });
-
-                    } catch (error) {
-                        console.error(`Erreur ${token.symbol}:`, error);
-                    }
-                }
-
-                if (balances.length === 0) {
-                    tokenBalancesDiv.innerHTML = '<div style="text-align: center; color: #64748b; padding: 20px;">Aucun token</div>';
-                } else {
-                    tokenBalancesDiv.innerHTML = '';
-                    
-                    balances.forEach(token => {
-                        const balanceColor = token.balance > 0 ? '#10b981' : '#64748b';
-                        const trustBadge = token.trusted ? '<div style="position: absolute; top: 8px; right: 8px; background: #10b981; color: white; padding: 2px 6px; border-radius: 4px; font-size: 9px;">✓</div>' : '';
-                        
-                        const tokenCard = document.createElement('div');
-                        tokenCard.className = 'token-card';
-                        tokenCard.innerHTML = `
-                            ${trustBadge}
-                            <div style="font-size: 24px; margin-bottom: 8px;">🪙</div>
-                            <div style="color: #f59e0b; font-weight: 700; font-size: 16px; margin-bottom: 4px;">${token.symbol}</div>
-                            <div style="color: ${balanceColor}; font-weight: 900; font-size: 20px;">
-                                ${token.balance.toFixed(token.balance > 1 ? 2 : 6)}
-                            </div>
-                        `;
-                        tokenBalancesDiv.appendChild(tokenCard);
-                    });
-                }
-
-            } catch (error) {
-                console.error('Erreur tokens:', error);
-                tokenBalancesDiv.innerHTML = '<div style="text-align: center; color: #dc2626; padding: 20px;">❌ Erreur</div>';
-            }
-        }
-
-        async function addTokenByAddress() {
-            const address = document.getElementById('tokenAddressInput').value.trim();
-            const resultDiv = document.getElementById('tokenSearchResult');
-
-            if (!address || !ethers.isAddress(address)) {
-                resultDiv.innerHTML = '<div class="error">❌ Adresse invalide</div>';
-                return;
-            }
-
-            resultDiv.innerHTML = '<div class="info-box">🔍 Recherche...</div>';
-
-            try {
-                const tokenContract = new ethers.Contract(address, ERC20_ABI, provider);
-                
-                const [symbol, name] = await Promise.all([
-                    tokenContract.symbol(),
-                    tokenContract.name()
-                ]);
-
-                const alreadyAdded = securityConfig.knownTokens.some(t => t.address.toLowerCase() === address.toLowerCase());
-
-                if (alreadyAdded) {
-                    resultDiv.innerHTML = '<div class="warning">ℹ️ Token déjà ajouté</div>';
-                    await loadTokenBalances();
-                    return;
-                }
-
-                resultDiv.innerHTML = `
-                    <div class="success-msg">
-                        ✅ ${name} (${symbol}) trouvé !<br>
-                        <button onclick="confirmAddToken('${address}', '${symbol}', '${name}')" class="success" style="margin-top: 10px;">
-                            Ajouter ${symbol}
-                        </button>
-                    </div>
-                `;
-
-            } catch (error) {
-                resultDiv.innerHTML = '<div class="error">❌ ' + error.message + '</div>';
-            }
-        }
-
-        function confirmAddToken(address, symbol, name) {
-            securityConfig.knownTokens.push({
-                address: address,
-                symbol: symbol,
-                name: name,
-                trusted: true,
-                addedAt: new Date().toISOString()
-            });
-
-            saveConfig();
-
-            document.getElementById('tokenAddressInput').value = '';
-            document.getElementById('tokenSearchResult').innerHTML = '<div class="success-msg">✅ ' + symbol + ' ajouté !</div>';
-
-            loadTokenBalances();
-
-            if (TELEGRAM_BOT_TOKEN && securityConfig.telegramChatId) {
-                sendTelegramMessage(`🪙 <b>Nouveau token ajouté</b>\n\n✅ ${name} (${symbol})\n📍 ${address}`);
-            }
-        }
-
-        async function refreshAllTokens() {
-            await loadTokenBalances();
-        }
-
-        // SWAP FUNCTIONS
-        function populateSwapTokens() {
-            const fromSelect = document.getElementById('swapFromToken');
-            const toSelect = document.getElementById('swapToToken');
-
-            fromSelect.innerHTML = '<option value="BNB">BNB</option>';
-            toSelect.innerHTML = '<option value="">Choisir...</option>';
-
-            securityConfig.knownTokens.forEach(token => {
-                const option = `<option value="${token.address}">${token.symbol}</option>`;
-                fromSelect.innerHTML += option;
-                toSelect.innerHTML += option;
-            });
-        }
-
-        async function updateSwapBalances() {
-            if (!wallet) return;
-
-            const fromToken = document.getElementById('swapFromToken').value;
-            const toToken = document.getElementById('swapToToken').value;
-
-            try {
-                let fromBalance = '0.0';
-                let toBalance = '0.0';
-
-                if (fromToken === 'BNB') {
-                    const balance = await provider.getBalance(wallet.address);
-                    fromBalance = parseFloat(ethers.formatEther(balance)).toFixed(4);
-                } else {
-                    const contract = new ethers.Contract(fromToken, ERC20_ABI, provider);
-                    const balance = await contract.balanceOf(wallet.address);
-                    const decimals = await contract.decimals();
-                    fromBalance = parseFloat(ethers.formatUnits(balance, decimals)).toFixed(6);
-                }
-
-                if (toToken && toToken !== 'BNB') {
-                    const contract = new ethers.Contract(toToken, ERC20_ABI, provider);
-                    const balance = await contract.balanceOf(wallet.address);
-                    const decimals = await contract.decimals();
-                    toBalance = parseFloat(ethers.formatUnits(balance, decimals)).toFixed(6);
-                } else if (toToken === 'BNB') {
-                    const balance = await provider.getBalance(wallet.address);
-                    toBalance = parseFloat(ethers.formatEther(balance)).toFixed(4);
-                }
-
-                document.getElementById('fromBalance').textContent = `Balance: ${fromBalance}`;
-                document.getElementById('toBalance').textContent = `Balance: ${toBalance}`;
-
-            } catch (error) {
-                console.error('Erreur balances:', error);
-            }
-        }
-
-        function updateSwapTokens() {
-            updateSwapBalances();
-            calculateSwapOutput();
-        }
-
-        async function calculateSwapOutput() {
-            const fromToken = document.getElementById('swapFromToken').value;
-            const toToken = document.getElementById('swapToToken').value;
-            const fromAmount = document.getElementById('swapFromAmount').value;
-
-            if (!fromAmount || !toToken || parseFloat(fromAmount) <= 0) {
-                document.getElementById('swapToAmount').value = '';
-                document.getElementById('swapPrice').textContent = '-';
-                document.getElementById('minReceived').textContent = '-';
-                document.getElementById('priceImpact').textContent = '-';
-                return;
-            }
-
-            try {
-                const routerContract = new ethers.Contract(PANCAKESWAP_ROUTER, ROUTER_ABI, provider);
-
-                let path = [];
-                if (fromToken === 'BNB') {
-                    path = [WBNB_ADDRESS, toToken];
-                } else if (toToken === 'BNB') {
-                    path = [fromToken, WBNB_ADDRESS];
-                } else {
-                    path = [fromToken, WBNB_ADDRESS, toToken];
-                }
-
-                let amountIn;
-                if (fromToken === 'BNB') {
-                    amountIn = ethers.parseEther(fromAmount);
-                } else {
-                    const tokenContract = new ethers.Contract(fromToken, ERC20_ABI, provider);
-                    const decimals = await tokenContract.decimals();
-                    amountIn = ethers.parseUnits(fromAmount, decimals);
-                }
-
-                const amounts = await routerContract.getAmountsOut(amountIn, path);
-                const outputAmount = amounts[amounts.length - 1];
-
-                let formattedOutput;
-                if (toToken === 'BNB') {
-                    formattedOutput = parseFloat(ethers.formatEther(outputAmount));
-                } else {
-                    const tokenContract = new ethers.Contract(toToken, ERC20_ABI, provider);
-                    const decimals = await tokenContract.decimals();
-                    formattedOutput = parseFloat(ethers.formatUnits(outputAmount, decimals));
-                }
-
-                document.getElementById('swapToAmount').value = formattedOutput.toFixed(6);
-
-                const price = formattedOutput / parseFloat(fromAmount);
-                const minReceived = formattedOutput * (1 - swapConfig.slippage / 100);
-
-                const toTokenInfo = securityConfig.knownTokens.find(t => t.address === toToken);
-                const toSymbol = toTokenInfo ? toTokenInfo.symbol : 'Token';
-
-                document.getElementById('swapPrice').textContent = `1 ${fromToken === 'BNB' ? 'BNB' : 'Token'} = ${price.toFixed(6)} ${toSymbol}`;
-                document.getElementById('minReceived').textContent = `${minReceived.toFixed(6)} ${toSymbol}`;
-                document.getElementById('priceImpact').textContent = '< 0.1%';
-
-            } catch (error) {
-                console.error('Erreur calcul:', error);
-                document.getElementById('swapToAmount').value = '';
-                document.getElementById('swapPrice').textContent = 'Erreur';
-            }
-        }
-
-        function setSlippage(value) {
-            swapConfig.slippage = value;
-            saveConfig();
-
-            document.querySelectorAll('.slippage-option').forEach(opt => {
-                opt.classList.remove('active');
-            });
-            event.target.classList.add('active');
-
-            calculateSwapOutput();
-        }
-
-        async function executeSwap() {
-            const fromToken = document.getElementById('swapFromToken').value;
-            const toToken = document.getElementById('swapToToken').value;
-            const fromAmount = document.getElementById('swapFromAmount').value;
-            const toAmount = document.getElementById('swapToAmount').value;
-            const messageDiv = document.getElementById('swapMessage');
-
-            if (!fromAmount || !toToken || !toAmount) {
-                messageDiv.innerHTML = '<div class="error">❌ Remplissez tous les champs</div>';
-                return;
-            }
-
-            const btn = document.getElementById('swapButton');
-            btn.disabled = true;
-            btn.innerHTML = '⏳ Swap en cours...';
-
-            try {
-                const routerContract = new ethers.Contract(PANCAKESWAP_ROUTER, ROUTER_ABI, wallet);
-
-                let path = [];
-                if (fromToken === 'BNB') {
-                    path = [WBNB_ADDRESS, toToken];
-                } else if (toToken === 'BNB') {
-                    path = [fromToken, WBNB_ADDRESS];
-                } else {
-                    path = [fromToken, WBNB_ADDRESS, toToken];
-                }
-
-                const deadline = Math.floor(Date.now() / 1000) + (swapConfig.deadline * 60);
-                const minOutput = parseFloat(toAmount) * (1 - swapConfig.slippage / 100);
-
-                let tx;
-
-                if (fromToken === 'BNB') {
-                    const amountIn = ethers.parseEther(fromAmount);
-                    const amountOutMin = toToken === 'BNB' ? ethers.parseEther(minOutput.toString()) : ethers.parseUnits(minOutput.toString(), 18);
-
-                    tx = await routerContract.swapExactETHForTokens(
-                        amountOutMin,
-                        path,
-                        wallet.address,
-                        deadline,
-                        { value: amountIn }
-                    );
-                } else {
-                    const tokenContract = new ethers.Contract(fromToken, ERC20_ABI, wallet);
-                    const decimals = await tokenContract.decimals();
-                    const amountIn = ethers.parseUnits(fromAmount, decimals);
-
-                    const allowance = await tokenContract.allowance(wallet.address, PANCAKESWAP_ROUTER);
-                    if (allowance < amountIn) {
-                        messageDiv.innerHTML = '<div class="warning">⏳ Approbation en cours...</div>';
-                        const approveTx = await tokenContract.approve(PANCAKESWAP_ROUTER, ethers.MaxUint256);
-                        await approveTx.wait();
-                    }
-
-                    const amountOutMin = toToken === 'BNB' ? ethers.parseEther(minOutput.toString()) : ethers.parseUnits(minOutput.toString(), 18);
-
-                    if (toToken === 'BNB') {
-                        tx = await routerContract.swapExactTokensForETH(
-                            amountIn,
-                            amountOutMin,
-                            path,
-                            wallet.address,
-                            deadline
-                        );
-                    } else {
-                        tx = await routerContract.swapExactTokensForTokens(
-                            amountIn,
-                            amountOutMin,
-                            path,
-                            wallet.address,
-                            deadline
-                        );
-                    }
-                }
-
-                messageDiv.innerHTML = '<div class="success-msg">⏳ Transaction envoyée...</div>';
-
                 await tx.wait();
 
                 const fromTokenInfo = securityConfig.knownTokens.find(t => t.address === fromToken);
@@ -1434,7 +1123,6 @@
             alert('✅ Limites mises à jour !');
         }
 
-        // 🔥🔥🔥 FONCTION CORRIGÉE : CONNEXION AUTO AU TRADING BOT 🔥🔥🔥
         function openTradingBot() {
             if (!wallet) {
                 alert('❌ Wallet non déverrouillé !');
@@ -1448,25 +1136,22 @@
             const botWindow = window.open('https://bot-test-zeta-neon.vercel.app/', 'JercatBot', 'width=1400,height=900');
             
             if (botWindow) {
-                // ✅ ATTENDRE QUE LE BOT SOIT CHARGÉ PUIS ENVOYER LES DONNÉES
                 setTimeout(() => {
                     try {
                         const messageData = {
                             type: 'JERCAT_WALLET_CONNECTED',
                             account: wallet.address,
-                            privateKey: wallet.privateKey // 🔑 CLÉ PRIVÉE POUR TRADING AUTOMATIQUE
+                            privateKey: wallet.privateKey
                         };
 
                         console.log('📤 Envoi des données au bot...');
                         console.log('📍 Adresse:', wallet.address);
                         console.log('🔑 Clé envoyée:', wallet.privateKey.substring(0, 10) + '...');
 
-                        // Envoyer via postMessage
                         botWindow.postMessage(messageData, 'https://bot-test-zeta-neon.vercel.app');
 
                         console.log('✅ Message envoyé au bot avec succès !');
                         
-                        // Notification Telegram
                         if (TELEGRAM_BOT_TOKEN && securityConfig.telegramChatId) {
                             sendTelegramMessage(`🤖 <b>Trading Bot ouvert</b>\n\n✅ Connexion automatique activée\n📍 ${wallet.address.substring(0,20)}...`);
                         }
@@ -1475,7 +1160,7 @@
                         console.error('❌ Erreur envoi:', error);
                         alert('❌ Erreur lors de l\'envoi des données au bot');
                     }
-                }, 3000); // 3 secondes pour que le bot charge complètement
+                }, 3000);
                 
                 alert('✅ Trading Bot ouvert !\n\n🤖 Connexion automatique en cours...\n📍 ' + wallet.address.substring(0, 20) + '...\n\n⏳ Patientez 3 secondes...');
             } else {
@@ -1483,7 +1168,6 @@
             }
         }
 
-        // DISPLAY UPDATES
         function updateStatsDisplay() {
             const maxTx = document.getElementById('maxPerTx');
             const dailyLim = document.getElementById('dailyLimit');
@@ -1535,7 +1219,7 @@
                     const statusColor = log.status === 'success' ? '#10b981' : '#dc2626';
                     entry.innerHTML = `
                         <div style="font-size: 11px; color: #64748b; margin-bottom: 5px;">${log.time}</div>
-                        <div><strong style="color: ${statusColor}">${log.status === 'success' ? '✅' : '❌'} ${log.amount} BNB</strong></div>
+                        <div><strong style="color: ${statusColor}">${log.status === 'success' ? '✅' : '❌'} ${log.amount} ${log.token}</strong></div>
                         <div style="font-size: 11px; color: #64748b;">→ ${log.to.substring(0,15)}...</div>
                     `;
                 }
@@ -1551,4 +1235,569 @@
         };
     </script>
 </body>
-</html>
+</html> loadTokenBalances();
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        async function loadTokenBalances() {
+            if (!wallet) return;
+
+            const tokenBalancesDiv = document.getElementById('tokenBalances');
+            tokenBalancesDiv.innerHTML = '<div style="text-align: center; color: #64748b; padding: 20px;">🔄 Chargement...</div>';
+
+            try {
+                const userAddress = wallet.address;
+                const balances = [];
+
+                for (const token of securityConfig.knownTokens) {
+                    try {
+                        const tokenContract = new ethers.Contract(token.address, ERC20_ABI, provider);
+                        
+                        const [balance, decimals, symbol] = await Promise.all([
+                            tokenContract.balanceOf(userAddress),
+                            tokenContract.decimals().catch(() => 18),
+                            tokenContract.symbol().catch(() => token.symbol)
+                        ]);
+
+                        const formattedBalance = parseFloat(ethers.formatUnits(balance, decimals));
+
+                        balances.push({
+                            symbol: symbol,
+                            balance: formattedBalance,
+                            trusted: token.trusted
+                        });
+
+                    } catch (error) {
+                        console.error(`Erreur ${token.symbol}:`, error);
+                    }
+                }
+
+                if (balances.length === 0) {
+                    tokenBalancesDiv.innerHTML = '<div style="text-align: center; color: #64748b; padding: 20px;">Aucun token</div>';
+                } else {
+                    tokenBalancesDiv.innerHTML = '';
+                    
+                    balances.forEach(token => {
+                        const balanceColor = token.balance > 0 ? '#10b981' : '#64748b';
+                        const trustBadge = token.trusted ? '<div style="position: absolute; top: 8px; right: 8px; background: #10b981; color: white; padding: 2px 6px; border-radius: 4px; font-size: 9px;">✓</div>' : '';
+                        
+                        const tokenCard = document.createElement('div');
+                        tokenCard.className = 'token-card';
+                        tokenCard.innerHTML = `
+                            ${trustBadge}
+                            <div style="font-size: 24px; margin-bottom: 8px;">🪙</div>
+                            <div style="color: #f59e0b; font-weight: 700; font-size: 16px; margin-bottom: 4px;">${token.symbol}</div>
+                            <div style="color: ${balanceColor}; font-weight: 900; font-size: 20px;">
+                                ${token.balance.toFixed(token.balance > 1 ? 2 : 6)}
+                            </div>
+                        `;
+                        tokenBalancesDiv.appendChild(tokenCard);
+                    });
+                }
+
+            } catch (error) {
+                console.error('Erreur tokens:', error);
+                tokenBalancesDiv.innerHTML = '<div style="text-align: center; color: #dc2626; padding: 20px;">❌ Erreur</div>';
+            }
+        }
+
+        async function addTokenByAddress() {
+            const address = document.getElementById('tokenAddressInput').value.trim();
+            const resultDiv = document.getElementById('tokenSearchResult');
+
+            if (!address || !ethers.isAddress(address)) {
+                resultDiv.innerHTML = '<div class="error">❌ Adresse invalide</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<div class="info-box">🔍 Recherche...</div>';
+
+            try {
+                const tokenContract = new ethers.Contract(address, ERC20_ABI, provider);
+                
+                const [symbol, name] = await Promise.all([
+                    tokenContract.symbol(),
+                    tokenContract.name()
+                ]);
+
+                const alreadyAdded = securityConfig.knownTokens.some(t => t.address.toLowerCase() === address.toLowerCase());
+
+                if (alreadyAdded) {
+                    resultDiv.innerHTML = '<div class="warning">ℹ️ Token déjà ajouté</div>';
+                    await loadTokenBalances();
+                    return;
+                }
+
+                resultDiv.innerHTML = `
+                    <div class="success-msg">
+                        ✅ ${name} (${symbol}) trouvé !<br>
+                        <button onclick="confirmAddToken('${address}', '${symbol}', '${name}')" class="success" style="margin-top: 10px;">
+                            Ajouter ${symbol}
+                        </button>
+                    </div>
+                `;
+
+            } catch (error) {
+                resultDiv.innerHTML = '<div class="error">❌ ' + error.message + '</div>';
+            }
+        }
+
+        function confirmAddToken(address, symbol, name) {
+            securityConfig.knownTokens.push({
+                address: address,
+                symbol: symbol,
+                name: name,
+                trusted: true,
+                addedAt: new Date().toISOString()
+            });
+
+            saveConfig();
+
+            document.getElementById('tokenAddressInput').value = '';
+            document.getElementById('tokenSearchResult').innerHTML = '<div class="success-msg">✅ ' + symbol + ' ajouté !</div>';
+
+            loadTokenBalances();
+
+            if (TELEGRAM_BOT_TOKEN && securityConfig.telegramChatId) {
+                sendTelegramMessage(`🪙 <b>Nouveau token ajouté</b>\n\n✅ ${name} (${symbol})\n📍 ${address}`);
+            }
+        }
+
+        async function refreshAllTokens() {
+            await loadTokenBalances();
+            await populateSendTokenSelect();
+        }
+
+        // SEND TOKEN FUNCTIONS
+        async function populateSendTokenSelect() {
+            if (!wallet) return;
+
+            const select = document.getElementById('sendTokenSelect');
+            if (!select) return;
+
+            select.innerHTML = '<option value="BNB">BNB</option>';
+
+            for (const token of securityConfig.knownTokens) {
+                try {
+                    const tokenContract = new ethers.Contract(token.address, ERC20_ABI, provider);
+                    const balance = await tokenContract.balanceOf(wallet.address);
+                    const decimals = await tokenContract.decimals();
+                    const formattedBalance = parseFloat(ethers.formatUnits(balance, decimals));
+
+                    if (formattedBalance > 0) {
+                        const option = document.createElement('option');
+                        option.value = token.address;
+                        option.textContent = `${token.symbol} (${formattedBalance.toFixed(6)})`;
+                        select.appendChild(option);
+                    }
+                } catch (error) {
+                    console.error(`Erreur ${token.symbol}:`, error);
+                }
+            }
+
+            await updateSendTokenBalance();
+        }
+
+        async function updateSendTokenBalance() {
+            if (!wallet) return;
+
+            const select = document.getElementById('sendTokenSelect');
+            const balanceDiv = document.getElementById('sendBalanceAmount');
+            
+            if (!select || !balanceDiv) return;
+
+            const selectedToken = select.value;
+
+            try {
+                if (selectedToken === 'BNB') {
+                    const balance = await provider.getBalance(wallet.address);
+                    const formatted = parseFloat(ethers.formatEther(balance));
+                    balanceDiv.textContent = `${formatted.toFixed(6)} BNB`;
+                } else {
+                    const tokenContract = new ethers.Contract(selectedToken, ERC20_ABI, provider);
+                    const balance = await tokenContract.balanceOf(wallet.address);
+                    const decimals = await tokenContract.decimals();
+                    const symbol = await tokenContract.symbol();
+                    const formatted = parseFloat(ethers.formatUnits(balance, decimals));
+                    balanceDiv.textContent = `${formatted.toFixed(6)} ${symbol}`;
+                }
+            } catch (error) {
+                console.error('Erreur balance:', error);
+                balanceDiv.textContent = '0.0';
+            }
+        }
+
+        async function setSendAmount(percentage) {
+            if (!wallet) return;
+
+            const select = document.getElementById('sendTokenSelect');
+            const amountInput = document.getElementById('sendAmount');
+            const selectedToken = select.value;
+
+            try {
+                let balance;
+
+                if (selectedToken === 'BNB') {
+                    const bnbBalance = await provider.getBalance(wallet.address);
+                    balance = parseFloat(ethers.formatEther(bnbBalance));
+                    
+                    // Garder 0.001 BNB pour les frais de gas
+                    if (percentage === 1) {
+                        balance = Math.max(0, balance - 0.001);
+                    }
+                } else {
+                    const tokenContract = new ethers.Contract(selectedToken, ERC20_ABI, provider);
+                    const tokenBalance = await tokenContract.balanceOf(wallet.address);
+                    const decimals = await tokenContract.decimals();
+                    balance = parseFloat(ethers.formatUnits(tokenBalance, decimals));
+                }
+
+                const amount = balance * percentage;
+                amountInput.value = amount.toFixed(8);
+
+            } catch (error) {
+                console.error('Erreur calcul montant:', error);
+            }
+        }
+
+        async function sendToken() {
+            const select = document.getElementById('sendTokenSelect');
+            const toAddress = document.getElementById('sendToAddress').value.trim();
+            const amount = document.getElementById('sendAmount').value;
+            const messageDiv = document.getElementById('sendTokenMessage');
+            const btn = document.getElementById('sendTokenBtn');
+
+            if (!toAddress || !ethers.isAddress(toAddress)) {
+                messageDiv.innerHTML = '<div class="error">❌ Adresse invalide</div>';
+                return;
+            }
+
+            if (!amount || parseFloat(amount) <= 0) {
+                messageDiv.innerHTML = '<div class="error">❌ Montant invalide</div>';
+                return;
+            }
+
+            const selectedToken = select.value;
+            const tokenInfo = securityConfig.knownTokens.find(t => t.address === selectedToken);
+            const symbol = selectedToken === 'BNB' ? 'BNB' : (tokenInfo ? tokenInfo.symbol : 'Token');
+
+            // Confirmation
+            if (!confirm(`⚠️ Confirmer l'envoi de ${amount} ${symbol} à:\n\n${toAddress}`)) {
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '⏳ Envoi en cours...';
+            messageDiv.innerHTML = '<div class="warning">⏳ Transaction en cours...</div>';
+
+            try {
+                let tx;
+
+                if (selectedToken === 'BNB') {
+                    // Envoi de BNB
+                    tx = await wallet.sendTransaction({
+                        to: toAddress,
+                        value: ethers.parseEther(amount)
+                    });
+                } else {
+                    // Envoi de token ERC20
+                    const tokenContract = new ethers.Contract(selectedToken, ERC20_ABI, wallet);
+                    const decimals = await tokenContract.decimals();
+                    const amountInWei = ethers.parseUnits(amount, decimals);
+
+                    tx = await tokenContract.transfer(toAddress, amountInWei);
+                }
+
+                messageDiv.innerHTML = '<div class="success-msg">⏳ Transaction envoyée, en attente de confirmation...</div>';
+
+                const receipt = await tx.wait();
+
+                // Enregistrer dans l'historique
+                securityConfig.transactionLogs.unshift({
+                    time: new Date().toLocaleString(),
+                    type: 'send',
+                    token: symbol,
+                    amount: amount,
+                    to: toAddress,
+                    hash: tx.hash,
+                    status: 'success'
+                });
+
+                if (securityConfig.transactionLogs.length > 50) {
+                    securityConfig.transactionLogs = securityConfig.transactionLogs.slice(0, 50);
+                }
+
+                saveConfig();
+                updateLogsDisplay();
+
+                messageDiv.innerHTML = `
+                    <div class="success-msg">
+                        ✅ Envoi réussi !<br>
+                        <div style="font-size: 11px; margin-top: 8px; color: #064e3b; word-break: break-all;">
+                            Hash: ${tx.hash}
+                        </div>
+                    </div>
+                `;
+
+                // Notification Telegram
+                if (TELEGRAM_BOT_TOKEN && securityConfig.telegramChatId) {
+                    await sendTelegramMessage(
+                        `📤 <b>Token envoyé</b>\n\n` +
+                        `✅ ${amount} ${symbol}\n` +
+                        `📍 Vers: ${toAddress.substring(0,20)}...\n` +
+                        `🔗 ${tx.hash.substring(0,20)}...`
+                    );
+                }
+
+                // Réinitialiser les champs
+                document.getElementById('sendToAddress').value = '';
+                document.getElementById('sendAmount').value = '';
+
+                // Rafraîchir les balances
+                await refreshBalance();
+                await updateSendTokenBalance();
+
+            } catch (error) {
+                console.error('Erreur envoi:', error);
+                
+                let errorMsg = error.message;
+                if (errorMsg.includes('insufficient funds')) {
+                    errorMsg = 'Fonds insuffisants';
+                } else if (errorMsg.includes('user rejected')) {
+                    errorMsg = 'Transaction annulée';
+                }
+
+                messageDiv.innerHTML = `<div class="error">❌ ${errorMsg}</div>`;
+
+                // Notification Telegram en cas d'erreur
+                if (TELEGRAM_BOT_TOKEN && securityConfig.telegramChatId) {
+                    await sendTelegramMessage(
+                        `⚠️ <b>Échec d'envoi</b>\n\n` +
+                        `❌ ${amount} ${symbol}\n` +
+                        `📍 Vers: ${toAddress.substring(0,20)}...\n` +
+                        `🔥 Erreur: ${errorMsg}`
+                    );
+                }
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '📤 Envoyer';
+            }
+        }
+
+        // SWAP FUNCTIONS
+        function populateSwapTokens() {
+            const fromSelect = document.getElementById('swapFromToken');
+            const toSelect = document.getElementById('swapToToken');
+
+            fromSelect.innerHTML = '<option value="BNB">BNB</option>';
+            toSelect.innerHTML = '<option value="">Choisir...</option>';
+
+            securityConfig.knownTokens.forEach(token => {
+                const option = `<option value="${token.address}">${token.symbol}</option>`;
+                fromSelect.innerHTML += option;
+                toSelect.innerHTML += option;
+            });
+        }
+
+        async function updateSwapBalances() {
+            if (!wallet) return;
+
+            const fromToken = document.getElementById('swapFromToken').value;
+            const toToken = document.getElementById('swapToToken').value;
+
+            try {
+                let fromBalance = '0.0';
+                let toBalance = '0.0';
+
+                if (fromToken === 'BNB') {
+                    const balance = await provider.getBalance(wallet.address);
+                    fromBalance = parseFloat(ethers.formatEther(balance)).toFixed(4);
+                } else {
+                    const contract = new ethers.Contract(fromToken, ERC20_ABI, provider);
+                    const balance = await contract.balanceOf(wallet.address);
+                    const decimals = await contract.decimals();
+                    fromBalance = parseFloat(ethers.formatUnits(balance, decimals)).toFixed(6);
+                }
+
+                if (toToken && toToken !== 'BNB') {
+                    const contract = new ethers.Contract(toToken, ERC20_ABI, provider);
+                    const balance = await contract.balanceOf(wallet.address);
+                    const decimals = await contract.decimals();
+                    toBalance = parseFloat(ethers.formatUnits(balance, decimals)).toFixed(6);
+                } else if (toToken === 'BNB') {
+                    const balance = await provider.getBalance(wallet.address);
+                    toBalance = parseFloat(ethers.formatEther(balance)).toFixed(4);
+                }
+
+                document.getElementById('fromBalance').textContent = `Balance: ${fromBalance}`;
+                document.getElementById('toBalance').textContent = `Balance: ${toBalance}`;
+
+            } catch (error) {
+                console.error('Erreur balances:', error);
+            }
+        }
+
+        function updateSwapTokens() {
+            updateSwapBalances();
+            calculateSwapOutput();
+        }
+
+        async function calculateSwapOutput() {
+            const fromToken = document.getElementById('swapFromToken').value;
+            const toToken = document.getElementById('swapToToken').value;
+            const fromAmount = document.getElementById('swapFromAmount').value;
+
+            if (!fromAmount || !toToken || parseFloat(fromAmount) <= 0) {
+                document.getElementById('swapToAmount').value = '';
+                document.getElementById('swapPrice').textContent = '-';
+                document.getElementById('minReceived').textContent = '-';
+                document.getElementById('priceImpact').textContent = '-';
+                return;
+            }
+
+            try {
+                const routerContract = new ethers.Contract(PANCAKESWAP_ROUTER, ROUTER_ABI, provider);
+
+                let path = [];
+                if (fromToken === 'BNB') {
+                    path = [WBNB_ADDRESS, toToken];
+                } else if (toToken === 'BNB') {
+                    path = [fromToken, WBNB_ADDRESS];
+                } else {
+                    path = [fromToken, WBNB_ADDRESS, toToken];
+                }
+
+                let amountIn;
+                if (fromToken === 'BNB') {
+                    amountIn = ethers.parseEther(fromAmount);
+                } else {
+                    const tokenContract = new ethers.Contract(fromToken, ERC20_ABI, provider);
+                    const decimals = await tokenContract.decimals();
+                    amountIn = ethers.parseUnits(fromAmount, decimals);
+                }
+
+                const amounts = await routerContract.getAmountsOut(amountIn, path);
+                const outputAmount = amounts[amounts.length - 1];
+
+                let formattedOutput;
+                if (toToken === 'BNB') {
+                    formattedOutput = parseFloat(ethers.formatEther(outputAmount));
+                } else {
+                    const tokenContract = new ethers.Contract(toToken, ERC20_ABI, provider);
+                    const decimals = await tokenContract.decimals();
+                    formattedOutput = parseFloat(ethers.formatUnits(outputAmount, decimals));
+                }
+
+                document.getElementById('swapToAmount').value = formattedOutput.toFixed(6);
+
+                const price = formattedOutput / parseFloat(fromAmount);
+                const minReceived = formattedOutput * (1 - swapConfig.slippage / 100);
+
+                const toTokenInfo = securityConfig.knownTokens.find(t => t.address === toToken);
+                const toSymbol = toTokenInfo ? toTokenInfo.symbol : 'Token';
+
+                document.getElementById('swapPrice').textContent = `1 ${fromToken === 'BNB' ? 'BNB' : 'Token'} = ${price.toFixed(6)} ${toSymbol}`;
+                document.getElementById('minReceived').textContent = `${minReceived.toFixed(6)} ${toSymbol}`;
+                document.getElementById('priceImpact').textContent = '< 0.1%';
+
+            } catch (error) {
+                console.error('Erreur calcul:', error);
+                document.getElementById('swapToAmount').value = '';
+                document.getElementById('swapPrice').textContent = 'Erreur';
+            }
+        }
+
+        function setSlippage(value) {
+            swapConfig.slippage = value;
+            saveConfig();
+
+            document.querySelectorAll('.slippage-option').forEach(opt => {
+                opt.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            calculateSwapOutput();
+        }
+
+        async function executeSwap() {
+            const fromToken = document.getElementById('swapFromToken').value;
+            const toToken = document.getElementById('swapToToken').value;
+            const fromAmount = document.getElementById('swapFromAmount').value;
+            const toAmount = document.getElementById('swapToAmount').value;
+            const messageDiv = document.getElementById('swapMessage');
+
+            if (!fromAmount || !toToken || !toAmount) {
+                messageDiv.innerHTML = '<div class="error">❌ Remplissez tous les champs</div>';
+                return;
+            }
+
+            const btn = document.getElementById('swapButton');
+            btn.disabled = true;
+            btn.innerHTML = '⏳ Swap en cours...';
+
+            try {
+                const routerContract = new ethers.Contract(PANCAKESWAP_ROUTER, ROUTER_ABI, wallet);
+
+                let path = [];
+                if (fromToken === 'BNB') {
+                    path = [WBNB_ADDRESS, toToken];
+                } else if (toToken === 'BNB') {
+                    path = [fromToken, WBNB_ADDRESS];
+                } else {
+                    path = [fromToken, WBNB_ADDRESS, toToken];
+                }
+
+                const deadline = Math.floor(Date.now() / 1000) + (swapConfig.deadline * 60);
+                const minOutput = parseFloat(toAmount) * (1 - swapConfig.slippage / 100);
+
+                let tx;
+
+                if (fromToken === 'BNB') {
+                    const amountIn = ethers.parseEther(fromAmount);
+                    const amountOutMin = toToken === 'BNB' ? ethers.parseEther(minOutput.toString()) : ethers.parseUnits(minOutput.toString(), 18);
+
+                    tx = await routerContract.swapExactETHForTokens(
+                        amountOutMin,
+                        path,
+                        wallet.address,
+                        deadline,
+                        { value: amountIn }
+                    );
+                } else {
+                    const tokenContract = new ethers.Contract(fromToken, ERC20_ABI, wallet);
+                    const decimals = await tokenContract.decimals();
+                    const amountIn = ethers.parseUnits(fromAmount, decimals);
+
+                    const allowance = await tokenContract.allowance(wallet.address, PANCAKESWAP_ROUTER);
+                    if (allowance < amountIn) {
+                        messageDiv.innerHTML = '<div class="warning">⏳ Approbation en cours...</div>';
+                        const approveTx = await tokenContract.approve(PANCAKESWAP_ROUTER, ethers.MaxUint256);
+                        await approveTx.wait();
+                    }
+
+                    const amountOutMin = toToken === 'BNB' ? ethers.parseEther(minOutput.toString()) : ethers.parseUnits(minOutput.toString(), 18);
+
+                    if (toToken === 'BNB') {
+                        tx = await routerContract.swapExactTokensForETH(
+                            amountIn,
+                            amountOutMin,
+                            path,
+                            wallet.address,
+                            deadline
+                        );
+                    } else {
+                        tx = await routerContract.swapExactTokensForTokens(
+                            amountIn,
+                            amountOutMin,
+                            path,
+                            wallet.address,
+                            deadline
+                        );
+                    }
+                }
+
+                messageDiv.innerHTML = '<div class="success-msg">⏳ Transaction envoyée...</div>';
+
+                await
